@@ -94,10 +94,10 @@ public class TeleOp extends OpMode {
 	 */
 	@Override
 	public void loop() {
-		//double leftPower = gamepad1.left_stick_y;//set a variable to the left joystick's Y-Axis
-        // double rightPower = gamepad1.right_stick_y;//set a variable to the right joystick's Y-Axis
+		double leftPower = gamepad1.left_stick_y;//set a variable to the left joystick's Y-Axis
+        double rightPower = gamepad1.right_stick_y;//set a variable to the right joystick's Y-Axis
 
-       /* if(Math.abs(leftPower) <  .15) {
+        if(Math.abs(leftPower) <  .15) {
             motorLeft.setPower(0);
         } else {
             motorLeft.setPower(leftPower);
@@ -107,10 +107,10 @@ public class TeleOp extends OpMode {
             motorRight.setPower(0);
         } else {
             motorRight.setPower(rightPower);
-        }*/
+        }
 
-        motorRight.setPower(1);
-        motorLeft.setPower(1);
+        //motorRight.setPower(1);
+        //motorLeft.setPower(1);
 
 
 
