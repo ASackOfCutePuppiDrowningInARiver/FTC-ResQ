@@ -44,13 +44,11 @@ public class FUNctions{
 
 
 
-
 	/**
 	 * Constructor
 	 */
 
     public FUNctions() {
-
 
 
 	}

@@ -63,8 +63,8 @@ public class ResQTeleOP extends OpMode {
 		motorRight = hardwareMap.dcMotor.get("rightMotor");
 		motorLeft = hardwareMap.dcMotor.get("leftMotor");
 		motorIntake = hardwareMap.dcMotor.get("intake");
-
-
+        motorLeft.setDirection(DcMotor.Direction.REVERSE);
+// hola BOB! says hola HAHAHAHAHAHAHA
 
 
 	}
@@ -80,19 +80,34 @@ public class ResQTeleOP extends OpMode {
 	@Override
 	public void loop() {
 
+		double leftPower = gamepad1.left_stick_y;
+		double rightPower = gamepad1.right_stick_y;
+       // boolean intakeButton = gamepad1.a;
 
-        boolean intakeButton = gamepad1.a;
-
-        functions.tankDrive(motorLeft, motorRight, gamepad1.left_stick_y, gamepad1.right_stick_y);
+        //functions.tankDrive(motorLeft, motorRight, gamepad1.left_stick_y, gamepad1.right_stick_y);
 
 
-		if (intakeButton == true) {
+		if (Math.abs(leftPower) < .15) {
+			motorLeft.setPower(0);
+		}
+		else {
+			motorLeft.setPower(leftPower);
+		}
+
+		if (Math.abs(rightPower) < .15) {
+			motorRight.setPower(0);
+		}
+		else  {
+			motorRight.setPower(rightPower);
+		}
+
+	/*	if (intakeButton == true) {
 			motorIntake.setPower(1);
 		}
         else {
             motorIntake.setPower(0);
         }
-
+*/
 
 	}
 
