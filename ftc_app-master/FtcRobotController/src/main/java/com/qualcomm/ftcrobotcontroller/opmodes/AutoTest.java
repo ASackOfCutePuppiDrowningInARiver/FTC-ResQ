@@ -33,6 +33,7 @@ package com.qualcomm.ftcrobotcontroller.opmodes;
 
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.DcMotorController;
 import com.qualcomm.robotcore.hardware.GyroSensor;
 import com.qualcomm.robotcore.hardware.IrSeekerSensor;
 
@@ -70,6 +71,25 @@ public class AutoTest extends LinearOpMode {
       motorRight.setPower(0);
   }
 
+    public void straight(double seconds, double power) {
+        double startTime = time;
+        while (time - startTime < seconds) {
+            motorLeft.setPower(power);
+            motorRight.setPower(power);
+        }
+        motorLeft.setPower(0);
+        motorRight.setPower(0);
+
+    }
+
+
+    public void straight2(long ms, double power) throws InterruptedException{
+        motorLeft.setPower(power);
+        motorRight.setPower(power);
+        sleep(ms);
+        motorLeft.setPower(0);
+        motorRight.setPower(0);
+    }
 
     @Override
     public void runOpMode() throws InterruptedException {
@@ -91,8 +111,22 @@ public class AutoTest extends LinearOpMode {
        /* while(true) {
             telemetry.addData("degrees", gyro.getRotation());
         }*/
+        //how to encoder
+        motorLeft.setChannelMode(DcMotorController.RunMode.RUN_USING_ENCODERS);
 
-      turnWithGyro(90);
+        motorLeft.setChannelMode(DcMotorController.RunMode.RESET_ENCODERS);
+
+        turnWithGyro(-30);
+        straight(7, 1);
+        turnWithGyro(-30);
+        straight(2, -1);
+        turnWithGyro(-90);
+        straight(4, 1);
+        turnWithGyro(30);
+        straight(2,1);
+
+
+
 
 
 
