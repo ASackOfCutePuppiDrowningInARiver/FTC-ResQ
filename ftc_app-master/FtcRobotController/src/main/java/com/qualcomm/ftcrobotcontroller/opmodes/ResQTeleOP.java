@@ -46,8 +46,6 @@ public class ResQTeleOP extends OpMode {
 	DcMotor motorRight;
 	DcMotor motorIntake;
 
-    FUNctions functions = new FUNctions();
-
 
 
 	/**
@@ -64,7 +62,7 @@ public class ResQTeleOP extends OpMode {
 		motorLeft = hardwareMap.dcMotor.get("leftMotor");
 		motorIntake = hardwareMap.dcMotor.get("intake");
         motorLeft.setDirection(DcMotor.Direction.REVERSE);
-// hola BOB! says hola HAHAHAHAHAHAHA
+
 
 
 	}

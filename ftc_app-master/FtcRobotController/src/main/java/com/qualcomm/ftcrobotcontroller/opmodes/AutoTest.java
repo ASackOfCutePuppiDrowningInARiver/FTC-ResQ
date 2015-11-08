@@ -42,93 +42,45 @@ import com.qualcomm.robotcore.hardware.IrSeekerSensor;
  */
 public class AutoTest extends LinearOpMode {
 
+    autoFunctions functions = new autoFunctions();
 
-
-    DcMotor motorRight;
     DcMotor motorLeft;
+    DcMotor motorRight;
     GyroSensor gyro;
 
-  public void turnWithGyro(int degreesToTurn) throws InterruptedException{
-    double degreesTurned = 0;
 
-     double initial = gyro.getRotation();
-
-
-    double MOTOR_POWER = 0.5 * (degreesToTurn/Math.abs(degreesToTurn));
-
-    while(Math.abs(degreesTurned) < Math.abs(degreesToTurn)) {
-        sleep(20);
-
-        double rotSpeed = gyro.getRotation() - initial;
-        degreesTurned += rotSpeed * 0.02;
-
-        motorLeft.setPower(MOTOR_POWER);
-        motorRight.setPower(-MOTOR_POWER);
-
-        telemetry.addData("degrees", degreesTurned);
-    }
-      motorLeft.setPower(0);
-      motorRight.setPower(0);
-  }
-
-    public void straight(double seconds, double power) {
-        double startTime = time;
-        while (time - startTime < seconds) {
-            motorLeft.setPower(power);
-            motorRight.setPower(power);
-        }
-        motorLeft.setPower(0);
-        motorRight.setPower(0);
-
-    }
-
-
-    public void straight2(long ms, double power) throws InterruptedException{
-        motorLeft.setPower(power);
-        motorRight.setPower(power);
-        sleep(ms);
-        motorLeft.setPower(0);
-        motorRight.setPower(0);
-    }
 
     @Override
     public void runOpMode() throws InterruptedException {
 
-      // set up the hardware devices we are going to use
+        // set up the hardware devices we are going to use
+        motorLeft = hardwareMap.dcMotor.get("motor_1");
+        motorRight = hardwareMap.dcMotor.get("motor_2");
+        gyro = hardwareMap.gyroSensor.get("gyro");
+        motorLeft.setMode(DcMotorController.RunMode.RUN_USING_ENCODERS);
+        motorRight.setMode(DcMotorController.RunMode.RUN_USING_ENCODERS);
+
+        motorLeft.setDirection(DcMotor.Direction.REVERSE);
+        functions.initializerobot();
+        // wait for the start button to be pressed
+        waitForStart();
+        //start
+
+        functions.driveStraight(0.5, 50);
+        functions.turnWithGyro(45);
+        functions.driveStraight(4.7, 70);
+        functions.turnWithGyro(45);
+        functions.driveStraight(.5, 40);
+        //beacon/shelter
+
+
+        functions.driveStraight(.5, -40);
+        functions.turnWithGyro(-45);
+        functions.driveStraight(1.3, -50);
+        functions.turnWithGyro(90);
+        functions.driveStraight(3, 85);
 
 
 
-
-
-      motorLeft = hardwareMap.dcMotor.get("motor_1");
-      motorRight = hardwareMap.dcMotor.get("motor_2");
-      gyro = hardwareMap.gyroSensor.get("gyro");
-
-      motorLeft.setDirection(DcMotor.Direction.REVERSE);
-
-      // wait for the start button to be pressed
-      waitForStart();
-       /* while(true) {
-            telemetry.addData("degrees", gyro.getRotation());
-        }*/
-        //how to encoder
-        motorLeft.setChannelMode(DcMotorController.RunMode.RUN_USING_ENCODERS);
-
-        motorLeft.setChannelMode(DcMotorController.RunMode.RESET_ENCODERS);
-
-        turnWithGyro(-30);
-        straight(7, 1);
-        turnWithGyro(-30);
-        straight(2, -1);
-        turnWithGyro(-90);
-        straight(4, 1);
-        turnWithGyro(30);
-        straight(2,1);
-
-
-
-
-
-
+        }
     }
-  }
