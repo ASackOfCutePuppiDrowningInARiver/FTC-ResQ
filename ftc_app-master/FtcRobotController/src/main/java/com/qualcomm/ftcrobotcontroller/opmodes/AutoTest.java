@@ -45,8 +45,9 @@ public class AutoTest extends LinearOpMode {
     autoFunctions functions = new autoFunctions();
 
     DcMotor motorLeft;
-    DcMotor motorRight;
-    GyroSensor gyro;
+    //DcMotor motorRight;
+    //GyroSensor gyro;
+    DcMotorController lel;
 
 
 
@@ -54,33 +55,57 @@ public class AutoTest extends LinearOpMode {
     public void runOpMode() throws InterruptedException {
 
         // set up the hardware devices we are going to use
-        motorLeft = hardwareMap.dcMotor.get("motor_1");
-        motorRight = hardwareMap.dcMotor.get("motor_2");
-        gyro = hardwareMap.gyroSensor.get("gyro");
-        motorLeft.setMode(DcMotorController.RunMode.RUN_USING_ENCODERS);
-        motorRight.setMode(DcMotorController.RunMode.RUN_USING_ENCODERS);
+        motorLeft = hardwareMap.dcMotor.get("leftMotor");
+        //motorRight = hardwareMap.dcMotor.get("rightMotor");
+        //gyro = hardwareMap.gyroSensor.get("gyro");
+        lel = hardwareMap.dcMotorController.get("MC0");
+        //motorLeft.setMode(DcMotorController.RunMode.RUN_TO_POSITION);
+        //motorRight.setMode(DcMotorController.RunMode.RUN_USING_ENCODERS);
 
         motorLeft.setDirection(DcMotor.Direction.REVERSE);
-        functions.initializerobot();
+        //functions.initializerobot();
         // wait for the start button to be pressed
+        //lel.setMotorControllerDeviceMode(DcMotorController.DeviceMode.WRITE_ONLY);
+        lel.setMotorControllerDeviceMode(DcMotorController.DeviceMode.WRITE_ONLY);
         waitForStart();
         //start
 
-        functions.driveStraight(0.5, 50);
-        functions.turnWithGyro(45);
-        functions.driveStraight(4.7, 70);
-        functions.turnWithGyro(45);
-        functions.driveStraight(.5, 40);
-        //beacon/shelter
+
+        //motorLeft.setMode(DcMotorController.RunMode.RUN_USING_ENCODERS);
+        //motorLeft.setTargetPosition(10000);
+        motorLeft.setPower(.5);
+        waitForNextHardwareCycle();
 
 
-        functions.driveStraight(.5, -40);
-        functions.turnWithGyro(-45);
-        functions.driveStraight(1.3, -50);
-        functions.turnWithGyro(90);
-        functions.driveStraight(3, 85);
+            lel.setMotorControllerDeviceMode(DcMotorController.DeviceMode.READ_ONLY);
+            waitForNextHardwareCycle();
 
 
 
+
+       // motorLeft.setTargetPosition(1220);
+
+
+
+        while(motorLeft.getCurrentPosition() < 10000) {
+            waitForNextHardwareCycle();
+            telemetry.addData("l", motorLeft.getCurrentPosition());
+            telemetry.addData("mode", lel.getMotorControllerDeviceMode());
         }
+        telemetry.clearData();
+
+        lel.setMotorControllerDeviceMode(DcMotorController.DeviceMode.WRITE_ONLY);
+        motorLeft.setMode(DcMotorController.RunMode.RESET_ENCODERS);
+        while(lel.getMotorControllerDeviceMode() == DcMotorController.DeviceMode.READ_ONLY) {
+            waitForNextHardwareCycle();
+        }
+
+        motorLeft.setPower(0);
+
+        //lel.setMotorControllerDeviceMode(DcMotorController.DeviceMode.READ_ONLY);
+
+
+
+
     }
+}
