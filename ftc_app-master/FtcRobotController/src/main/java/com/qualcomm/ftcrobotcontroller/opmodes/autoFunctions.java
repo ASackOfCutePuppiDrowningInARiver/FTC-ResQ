@@ -118,7 +118,7 @@ public class autoFunctions extends LinearOpMode{
 
     public void driveStraight(double tiles, double power) throws InterruptedException {
         resetEncoders();
-        int encoderTicks = (int) ((tiles * 1440) / WHEEL_CIRCUMFERENCE);
+        int encoderTicks = (int) ((tiles * ENCODER_TICKS_PER_REVOLUTION) / WHEEL_CIRCUMFERENCE);
         boolean stopMotors = true;
 
         while (Math.abs(motorLeft.getCurrentPosition()) < encoderTicks) {
