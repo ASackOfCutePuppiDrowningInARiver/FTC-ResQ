@@ -62,7 +62,7 @@ public class autoFunctions extends LinearOpMode{
 
     }
 
-    int ENCODER_TICKS_PER_REVOLUTION = 1440;
+    int ENCODER_TICKS_PER_REVOLUTION = 1220;
     double WHEEL_DIAMETER = 4;
     double WHEEL_CIRCUMFERENCE = Math.PI * WHEEL_DIAMETER;
 
@@ -70,11 +70,6 @@ public class autoFunctions extends LinearOpMode{
     DcMotor motorRight;
     GyroSensor gyro;
 
-    public void motorAndSensorSetup(String leftMotor, String rightMotor, String GyroSensor) {
-        motorLeft = hardwareMap.dcMotor.get(leftMotor);
-        motorRight = hardwareMap.dcMotor.get(rightMotor);
-        gyro = hardwareMap.gyroSensor.get(GyroSensor);
-    }
 
     public void initializerobot() {
         motorLeft.setMode(DcMotorController.RunMode.RESET_ENCODERS);
@@ -93,7 +88,7 @@ public class autoFunctions extends LinearOpMode{
 
 
 
-    public void turnWithGyro(int degreesToTurn) throws InterruptedException{
+    public void turnWithGyro(int degreesToTurn, DcMotor left, DcMotor right) throws InterruptedException{
         double degreesTurned = 0;
 
         double initial = gyro.getRotation();
@@ -116,41 +111,36 @@ public class autoFunctions extends LinearOpMode{
         motorRight.setPower(0);
     }
 
-    public void driveStraight(double tiles, double power) throws InterruptedException {
-        resetEncoders();
+
+    public void driveWithEncoders(double tiles, DcMotor left, DcMotor right, DcMotorController MC) throws InterruptedException {
         int encoderTicks = (int) ((tiles * ENCODER_TICKS_PER_REVOLUTION) / WHEEL_CIRCUMFERENCE);
-        boolean stopMotors = true;
+        left.setPower(.5);
+        right.setPower(.5);
+        waitForNextHardwareCycle();
 
-        while (Math.abs(motorLeft.getCurrentPosition()) < encoderTicks) {
-            motorLeft.setPower(power);
-            motorRight.setPower(power);
+
+        MC.setMotorControllerDeviceMode(DcMotorController.DeviceMode.READ_ONLY);
+        waitForNextHardwareCycle();
+
+
+        // motorLeft.setTargetPosition(1220);
+
+
+        while (left.getCurrentPosition() < encoderTicks) {
+            waitForNextHardwareCycle();
+            telemetry.addData("l", left.getCurrentPosition());
+            //telemetry.addData("mode", MC.getMotorControllerDeviceMode());
+        }
+        //telemetry.clearData();
+
+        MC.setMotorControllerDeviceMode(DcMotorController.DeviceMode.WRITE_ONLY);
+        left.setMode(DcMotorController.RunMode.RESET_ENCODERS);
+        right.setMode(DcMotorController.RunMode.RESET_ENCODERS);
+        while (MC.getMotorControllerDeviceMode() == DcMotorController.DeviceMode.READ_ONLY) {
+            waitForNextHardwareCycle();
         }
 
-        if(stopMotors) {
-            motorLeft.setPower(0);
-            motorRight.setPower(0);
-        }
+        left.setPower(0);
+        right.setPower(0);
     }
-
-    public void driveStraight(double tiles, double power, boolean stopMotors) throws InterruptedException {
-        resetEncoders();
-        int encoderTicks = (int) ((tiles * 1440) / WHEEL_CIRCUMFERENCE);
-
-        while (Math.abs(motorLeft.getCurrentPosition()) < encoderTicks) {
-            motorLeft.setPower(power);
-            motorRight.setPower(power);
-        }
-
-        if(stopMotors) {
-            motorLeft.setPower(0);
-            motorRight.setPower(0);
-        }
-    }
-
-
-
-
-
-
-
 }
