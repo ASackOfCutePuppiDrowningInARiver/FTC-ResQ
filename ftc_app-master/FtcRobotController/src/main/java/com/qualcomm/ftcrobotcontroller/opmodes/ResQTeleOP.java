@@ -80,7 +80,7 @@ public class ResQTeleOP extends OpMode {
 
 		double leftPower = gamepad1.left_stick_y;
 		double rightPower = gamepad1.right_stick_y;
-       // boolean intakeButton = gamepad1.a;
+        boolean intakeButton = gamepad1.a;
 
         //functions.tankDrive(motorLeft, motorRight, gamepad1.left_stick_y, gamepad1.right_stick_y);
 
@@ -99,14 +99,12 @@ public class ResQTeleOP extends OpMode {
 			motorRight.setPower(rightPower);
 		}
 
-	/*	if (intakeButton == true) {
-			motorIntake.setPower(1);
-		}
+        if (intakeButton == true) {
+            motorIntake.setPower(0.85);
+        }
         else {
             motorIntake.setPower(0);
         }
-*/
-
 	}
 
 
