@@ -60,8 +60,10 @@ public class ResQTeleOP extends OpMode {
 
 		motorRight = hardwareMap.dcMotor.get("rightMotor");
 		motorLeft = hardwareMap.dcMotor.get("leftMotor");
-		motorIntake = hardwareMap.dcMotor.get("intake");
+		//motorIntake = hardwareMap.dcMotor.get("intake");
         motorLeft.setDirection(DcMotor.Direction.REVERSE);
+        //motorLeft.setMode(DcMotorController.RunMode.RUN_TO_POSITION);
+        //motorRight.setMode(DcMotorController.RunMode.RUN_USING_ENCODERS);
 
 
 
@@ -99,9 +101,26 @@ public class ResQTeleOP extends OpMode {
 			motorRight.setPower(rightPower);
 		}
 
+<<<<<<< HEAD
         if (intakeButton == true) {
             motorIntake.setPower(0.85);
         }
+=======
+        /*
+        motorLeft.setMode(DcMotorController.RunMode.RUN_USING_ENCODERS);
+
+
+        motorLeft.setPower(1);
+
+        int dis = motorLeft.getCurrentPosition();
+
+        telemetry.addData("left", dis);
+        */
+
+	/*	if (intakeButton == true) {
+			motorIntake.setPower(1);
+		}
+>>>>>>> refs/remotes/origin/master
         else {
             motorIntake.setPower(0);
         }
