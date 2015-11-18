@@ -44,6 +44,7 @@ public class BeaconShelterRampAuto extends LinearOpMode {
         while(driveController.getMotorControllerDeviceMode() != DcMotorController.DeviceMode.READ_ONLY) {
             waitOneFullHardwareCycle();
         }
+        wait1MSec(250);
 
         initial = motorLeft.getCurrentPosition();
 
@@ -51,47 +52,15 @@ public class BeaconShelterRampAuto extends LinearOpMode {
         while(driveController.getMotorControllerDeviceMode() != DcMotorController.DeviceMode.WRITE_ONLY) {
             waitOneFullHardwareCycle();
         }
-
+        wait1MSec(250);
 
         //driveController.setMotorControllerDeviceMode(DcMotorController.DeviceMode.WRITE_ONLY);
 
         waitForStart();
 
-        driveWithEncoders(5000, .5);
+        driveWithEncoders(2, .5);
         wait1MSec(1000);
-        driveWithEncoders(5000, .5);
-        wait1MSec(1000);
-        driveWithEncoders(5000, .5);
-
-        //setTarget(5000);
-        //setDriveSpeed(.5, .5);
-        //waitForEnocders();
-
-
-
-
-
-
-
-/*
-        driveWithEncoders(2);
-
-        sleep(1000);
-
-        driveWithEncoders(2);
-
-        sleep(1000);
-
-        driveWithEncoders(2);
-
-        sleep(1000);
-
-        driveWithEncoders(2);
-
-        sleep(1000);
-
-        driveWithEncoders(2);
-*/
+        driveWithEncoders(2, -.5);
 
 
 
@@ -104,39 +73,21 @@ public class BeaconShelterRampAuto extends LinearOpMode {
         motorRight.setPower(right);
     }
 
-    public void waitForEncodersForward() throws InterruptedException{
+    public void waitForEncoders() throws InterruptedException{
 
         driveController.setMotorControllerDeviceMode(DcMotorController.DeviceMode.READ_ONLY);
         while(driveController.getMotorControllerDeviceMode() != DcMotorController.DeviceMode.READ_ONLY) {
             waitOneFullHardwareCycle();
         }
 
-        while(Math.abs(motorLeft.getCurrentPosition()) - target < 5) {
-            telemetry.addData("enc", Math.abs(motorLeft.getCurrentPosition()) - target);
+        while(Math.abs(motorLeft.getCurrentPosition() - target) > 5) {
+            telemetry.addData("target", target);
+            telemetry.addData("enc", Math.abs(motorLeft.getCurrentPosition() - target));
+            telemetry.addData("initial", initial);
+            initial = motorLeft.getCurrentPosition();
         }
 
-        initial = motorLeft.getCurrentPosition();
 
-        driveController.setMotorControllerDeviceMode(DcMotorController.DeviceMode.WRITE_ONLY);
-        while(driveController.getMotorControllerDeviceMode() != DcMotorController.DeviceMode.WRITE_ONLY) {
-            waitOneFullHardwareCycle();
-        }
-        setDriveSpeed(0, 0);
-
-    }
-
-    public void waitForEncodersBackward() throws InterruptedException{
-
-        driveController.setMotorControllerDeviceMode(DcMotorController.DeviceMode.READ_ONLY);
-        while(driveController.getMotorControllerDeviceMode() != DcMotorController.DeviceMode.READ_ONLY) {
-            waitOneFullHardwareCycle();
-        }
-
-        while(Math.abs(motorLeft.getCurrentPosition()) - target > -5) {
-            telemetry.addData("enc", Math.abs(motorLeft.getCurrentPosition()) - target);
-        }
-
-        initial = motorLeft.getCurrentPosition();
 
         driveController.setMotorControllerDeviceMode(DcMotorController.DeviceMode.WRITE_ONLY);
         while(driveController.getMotorControllerDeviceMode() != DcMotorController.DeviceMode.WRITE_ONLY) {
@@ -158,20 +109,37 @@ public class BeaconShelterRampAuto extends LinearOpMode {
 
     }
 
-    public void driveWithEncoders(int target, double power) throws InterruptedException{
+
+
+    public void driveWithEncoders(double tiles, double power) throws InterruptedException{
         int multiplier = (int)(power/Math.abs(power));
+        int targetPos;
+        int ticks = (int)(((tiles * INCHES_PER_TILE)/WHEEL_CIRCUMFERENCE) * ENCODER_TICKS_PER_REVOLUTION);
+        targetPos = (ticks * multiplier);
 
-        target = (int)(target * multiplier);
 
-        setTarget(target);
+
+        setTarget(targetPos);
         setDriveSpeed(power, power);
-        wait1MSec(250);
-        if(multiplier > 0) {
-            waitForEncodersForward();
-        }
-        else {
-            waitForEncodersBackward();
-        }
-
+        wait1MSec(100);
+        waitForEncoders();
     }
+
+    public void turnWithGyro(int degreesToTurn) throws InterruptedException{
+        double MOTOR_POWER = 0.5;
+        double degreesTurned = 0;
+        double initial = gyro.getRotation();
+
+        while(Math.abs(degreesTurned) < Math.abs(degreesToTurn)) {
+            sleep(20);
+
+            double rotSpeed = (gyro.getRotation() - initial) * .02;
+            degreesTurned += rotSpeed;
+
+            motorLeft.setPower(MOTOR_POWER);
+            motorRight.setPower(-MOTOR_POWER);
+        }
+        setDriveSpeed(0, 0);
+    }
+
 }

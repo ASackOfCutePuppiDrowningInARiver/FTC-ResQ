@@ -32,39 +32,49 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 package com.qualcomm.ftcrobotcontroller.opmodes;
 
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
-import com.qualcomm.robotcore.hardware.*;
+import com.qualcomm.robotcore.hardware.DcMotor;
+
+import java.security.KeyPair;
 
 /**
  * TeleOp Mode
  * <p>
  * Enables control of the robot via the gamepad
  */
-public class ResQTeleOP extends OpMode {
+public class armtest extends OpMode {
 
 
+
+	DcMotor motorRight;//create two drive motors
 	DcMotor motorLeft;
-	DcMotor motorRight;
-	DcMotor motorIntake;
-    DcMotor motorWinch;
-    DcMotor motorArm;
-
 
 
 	/**
 	 * Constructor
 	 */
-	public ResQTeleOP() {
+	public armtest() {
+
 	}
 
 
+	//placeholders
+	double Kp = 1;
+	double Ki = 1;
+	double Kd = 1;
+
+	double Pcomponent;
+	double Icomponent;
+	double Dcomponent;
+
+	/*
+	 * Code to run when the op mode is first enabled goes here
+	 * 
+	 * @see com.qualcomm.robotcore.eventloop.opmode.OpMode#start()
+	 */
 	@Override
 	public void init() {
-		motorRight = hardwareMap.dcMotor.get("rightMotor");
-		motorLeft = hardwareMap.dcMotor.get("leftMotor");
-		//motorIntake = hardwareMap.dcMotor.get("intake");
-        //motorWinch = hardwareMap.dcMotor.get("winch");
-        //motorArm = hardwareMap.dcMotor.get("arm");
-        motorLeft.setDirection(DcMotor.Direction.REVERSE);
+
+
 	}
 
 	/*
@@ -72,65 +82,74 @@ public class ResQTeleOP extends OpMode {
 	 * 
 	 * @see com.qualcomm.robotcore.eventloop.opmode.OpMode#run()
 	 */
-
-
-    double multiplier = 1;
-    double WINCH_POWER = .75;
-
 	@Override
 	public void loop() {
+		double leftPower = gamepad1.left_stick_y;//set a variable to the left joystick's Y-Axis
+        double rightPower = gamepad1.right_stick_y;//set a variable to the right joystick's Y-Axis
 
-        double leftPower = gamepad1.left_stick_y;
-        double rightPower = gamepad1.right_stick_y;
-
-        double winchPower = gamepad1.left_stick_y;
-        double winchMultiplier = winchPower/Math.abs(winchPower);
-
-        if (gamepad1.left_bumper) {
-            multiplier = 0.5;
-        } else if (gamepad1.left_trigger > 0) {
-            multiplier = 1;
-        } else {
-            multiplier = 1;
-        }
-
-        telemetry.addData("triggered", gamepad1.left_trigger);
-
-        if (Math.abs(leftPower) < .15) {
+        if(Math.abs(leftPower) <  .15) {
             motorLeft.setPower(0);
         } else {
-            motorLeft.setPower(leftPower * multiplier);
+            motorLeft.setPower(leftPower);
         }
 
-        if (Math.abs(rightPower) < .15) {
+        if(Math.abs(rightPower) <  .15) {
             motorRight.setPower(0);
         } else {
-            motorRight.setPower(rightPower * multiplier);
-        }
-/*
-        if (gamepad2.a) {
-            motorIntake.setPower(.8);
-        } else {
-            motorIntake.setPower(0);
+            motorRight.setPower(rightPower);
         }
 
-        if (Math.abs(winchPower) < .15){
-            motorWinch.setPower(0);
-        } else {
-            motorWinch.setPower(WINCH_POWER * winchMultiplier);
-        }
+        //motorRight.setPower(1);
+        //motorLeft.setPower(1);
 
-        */
+
 
 
 	}
 
-
+	/*
+	 * Code to run when the op mode is first disabled goes here
+	 * 
+	 * @see com.qualcomm.robotcore.eventloop.opmode.OpMode#stop()
+	 */
 	@Override
 	public void stop() {
+
 	}
 
+    	
+	/*
+	 * This method scales the joystick input so for low joystick values, the 
+	 * scaled value is less than linear.  This is to make it easier to drive
+	 * the robot more precisely at slower speeds.
+	 */
+	double scaleInput(double dVal)  {
+		double[] scaleArray = { 0.0, 0.05, 0.09, 0.10, 0.12, 0.15, 0.18, 0.24,
+				0.30, 0.36, 0.43, 0.50, 0.60, 0.72, 0.85, 1.00, 1.00 };
+		
+		// get the corresponding index for the scaleInput array.
+		int index = (int) (dVal * 16.0);
+		
+		// index should be positive.
+		if (index < 0) {
+			index = -index;
+		}
 
+		// index cannot exceed size of array minus 1.
+		if (index > 16) {
+			index = 16;
+		}
 
+		// get value from the array.
+		double dScale = 0.0;
+		if (dVal < 0) {
+			dScale = -scaleArray[index];
+		} else {
+			dScale = scaleArray[index];
+		}
+
+		// return scaled value.
+		return dScale;
+	}
 
 }
