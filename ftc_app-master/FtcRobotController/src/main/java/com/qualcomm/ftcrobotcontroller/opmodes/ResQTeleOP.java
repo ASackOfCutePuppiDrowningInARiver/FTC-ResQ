@@ -59,11 +59,15 @@ public class ResQTeleOP extends OpMode {
 
 	@Override
 	public void init() {
+        //if the phones give error can't find motor <name>
+        //comment out the line with <name> in it with //
+        //this is because the motor isnt set up in the phone,
+        //so make sure the ResQ configuration is being used
 		motorRight = hardwareMap.dcMotor.get("rightMotor");
 		motorLeft = hardwareMap.dcMotor.get("leftMotor");
-		//motorIntake = hardwareMap.dcMotor.get("intake");
-        //motorWinch = hardwareMap.dcMotor.get("winch");
-        //motorArm = hardwareMap.dcMotor.get("arm");
+		motorIntake = hardwareMap.dcMotor.get("intake");
+        motorWinch = hardwareMap.dcMotor.get("winch");
+        motorArm = hardwareMap.dcMotor.get("arm");
         motorLeft.setDirection(DcMotor.Direction.REVERSE);
 	}
 
@@ -74,40 +78,43 @@ public class ResQTeleOP extends OpMode {
 	 */
 
 
-    double multiplier = 1;
-    double WINCH_POWER = .75;
+    //double multiplier = 1;
+
 
 	@Override
 	public void loop() {
 
         double leftPower = gamepad1.left_stick_y;
         double rightPower = gamepad1.right_stick_y;
-
-        double winchPower = gamepad1.left_stick_y;
-        double winchMultiplier = winchPower/Math.abs(winchPower);
-
+        // winch is ;left joystick driver 2
+        double winchPower = gamepad2.left_stick_y;
+        //arm is right joystick driver 2
+        double armPower = gamepad2.right_stick_y;
+        //intake is driver 2 button "a"
+/*
         if (gamepad1.left_bumper) {
             multiplier = 0.5;
-        } else if (gamepad1.left_trigger > 0) {
+        } else if (gamepad1.left_trigger > 0.01) {
             multiplier = 1;
         } else {
             multiplier = 1;
         }
+*/
 
-        telemetry.addData("triggered", gamepad1.left_trigger);
 
         if (Math.abs(leftPower) < .15) {
             motorLeft.setPower(0);
         } else {
-            motorLeft.setPower(leftPower * multiplier);
+            motorLeft.setPower(leftPower);
         }
 
         if (Math.abs(rightPower) < .15) {
             motorRight.setPower(0);
         } else {
-            motorRight.setPower(rightPower * multiplier);
+            motorRight.setPower(rightPower);
         }
-/*
+
+        //intake is driver two button "a"
         if (gamepad2.a) {
             motorIntake.setPower(.8);
         } else {
@@ -117,10 +124,14 @@ public class ResQTeleOP extends OpMode {
         if (Math.abs(winchPower) < .15){
             motorWinch.setPower(0);
         } else {
-            motorWinch.setPower(WINCH_POWER * winchMultiplier);
+            motorWinch.setPower(winchPower);
         }
 
-        */
+        if(Math.abs(armPower) < .20) {
+            motorArm.setPower(0);
+        } else {
+            motorArm.setPower(armPower);
+        }
 
 
 	}

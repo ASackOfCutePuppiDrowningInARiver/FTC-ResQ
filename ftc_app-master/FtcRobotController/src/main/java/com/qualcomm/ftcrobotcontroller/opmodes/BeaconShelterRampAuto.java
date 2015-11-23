@@ -17,7 +17,11 @@ public class BeaconShelterRampAuto extends LinearOpMode {
 
     DcMotor motorLeft;
     DcMotor motorRight;
+    DcMotor motorIntake;
+    DcMotor motorWinch;
+    DcMotor motorArm;
     GyroSensor gyro;
+    ColorSensor color;
     DcMotorController driveController;
     public ElapsedTime msecClock = new ElapsedTime();
 
@@ -28,17 +32,15 @@ public class BeaconShelterRampAuto extends LinearOpMode {
     @Override
     public void runOpMode() throws InterruptedException {
 
-        motorLeft = hardwareMap.dcMotor.get("leftMotor");
         motorRight = hardwareMap.dcMotor.get("rightMotor");
-        driveController = hardwareMap.dcMotorController.get("MC0");
-        gyro = hardwareMap.gyroSensor.get("gyro");
-
-
-
-
-        //motorLeft.setMode(DcMotorController.RunMode.RESET_ENCODERS);
-
+        motorLeft = hardwareMap.dcMotor.get("leftMotor");
+        //motorIntake = hardwareMap.dcMotor.get("intake");
+        //motorWinch = hardwareMap.dcMotor.get("winch");
+        //motorArm = hardwareMap.dcMotor.get("arm");
         motorLeft.setDirection(DcMotor.Direction.REVERSE);
+        driveController = hardwareMap.dcMotorController.get("MC0");
+        //gyro = hardwareMap.gyroSensor.get("gyro");
+        //color = hardwareMap.colorSensor.get("color");
 
         driveController.setMotorControllerDeviceMode(DcMotorController.DeviceMode.READ_ONLY);
         while(driveController.getMotorControllerDeviceMode() != DcMotorController.DeviceMode.READ_ONLY) {
@@ -57,13 +59,30 @@ public class BeaconShelterRampAuto extends LinearOpMode {
         //driveController.setMotorControllerDeviceMode(DcMotorController.DeviceMode.WRITE_ONLY);
 
         waitForStart();
-
+        /*telemetry.addData("", "Deciding...");
+        wait1MSec(3000);
+        telemetry.clearData();
+        telemetry.addData("", "The color is" + decideColor());
+        */
         driveWithEncoders(2, .5);
         wait1MSec(1000);
         driveWithEncoders(2, -.5);
 
 
 
+
+    }
+
+    public String decideColor() {
+        String out = "";
+
+        if(color.red() < color.blue()) {
+            out = "blue";
+        } else {
+            out = "red";
+        }
+
+        return out;
 
     }
 
