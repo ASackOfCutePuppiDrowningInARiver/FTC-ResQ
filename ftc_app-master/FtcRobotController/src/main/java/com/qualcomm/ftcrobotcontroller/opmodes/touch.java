@@ -1,4 +1,4 @@
-/* Copyright (c) 2015 Qualcomm Technologies Inc
+/* Copyright (c) 2014 Qualcomm Technologies Inc
 
 All rights reserved.
 
@@ -31,49 +31,67 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 
 package com.qualcomm.ftcrobotcontroller.opmodes;
 
-import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
+import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
-import com.qualcomm.robotcore.hardware.DcMotorController;
-import com.qualcomm.robotcore.hardware.GyroSensor;
-import com.qualcomm.robotcore.hardware.IrSeekerSensor;
+import com.qualcomm.robotcore.hardware.DeviceInterfaceModule;
+import com.qualcomm.robotcore.hardware.DigitalChannel;
 import com.qualcomm.robotcore.hardware.Servo;
+import com.qualcomm.robotcore.hardware.TouchSensor;
 
 /**
- * A simple example of a linear op mode that will approach an IR beacon
+ * TeleOp Mode
+ * <p>
+ * Enables control of the robot via the gamepad
  */
-public class AutoTest extends LinearOpMode {
-
-    autoFunctions functions = new autoFunctions();
-
-    DcMotor motorLeft;
-    //DcMotor motorRight;
-    //GyroSensor gyro;
-    DcMotorController lel;
-    Servo kek;
+public class touch extends OpMode {
 
 
 
-    @Override
-    public void runOpMode() throws InterruptedException {
+	/**
+	 * Constructor
+	 */
+	public touch() {
+	}
 
-        // set up the hardware devices we are going to use
-        motorLeft = hardwareMap.dcMotor.get("leftMotor");
-        //motorRight = hardwareMap.dcMotor.get("rightMotor");
-        //gyro = hardwareMap.gyroSensor.get("gyro");
-        lel = hardwareMap.dcMotorController.get("MC0");
-        //motorLeft.setMode(DcMotorController.RunMode.RUN_TO_POSITION);
-        //motorRight.setMode(DcMotorController.RunMode.RUN_USING_ENCODERS);
-
-        motorLeft.setDirection(DcMotor.Direction.REVERSE);
-        //functions.initializerobot();
-        // wait for the start button to be pressed
-        //lel.setMotorControllerDeviceMode(DcMotorController.DeviceMode.WRITE_ONLY);
-        lel.setMotorControllerDeviceMode(DcMotorController.DeviceMode.WRITE_ONLY);
-        waitForStart();
-        //start
+    DeviceInterfaceModule c;
+    TouchSensor touch;
+	DigitalChannel limit;
+	DigitalChannel te;
 
 
 
+
+	@Override
+	public void init() {
+        c = hardwareMap.deviceInterfaceModule.get("c");
+        touch = hardwareMap.touchSensor.get("t");
+		//limit = hardwareMap.digitalChannel.get()
 
     }
+
+	/*
+	 * This method will be called repeatedly in a loop
+	 * 
+	 * @see com.qualcomm.robotcore.eventloop.opmode.OpMode#run()
+	 */
+
+
+
+
+
+	@Override
+	public void loop() {
+
+        telemetry.addData("touch", touch.isPressed());
+
+	}
+
+
+	@Override
+	public void stop() {
+	}
+
+
+
+
 }

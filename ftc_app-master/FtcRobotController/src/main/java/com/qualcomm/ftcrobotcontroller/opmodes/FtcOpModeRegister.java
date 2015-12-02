@@ -64,6 +64,7 @@ public class FtcOpModeRegister implements OpModeRegister {
     //manager.register ("PushBotManual", PushBotManual.class);
     manager.register("ResQTeleOp", ResQTeleOP.class);
     manager.register("auto", BeaconShelterRampAuto.class);
+    manager.register("touch", touch.class);
 
 
     /*

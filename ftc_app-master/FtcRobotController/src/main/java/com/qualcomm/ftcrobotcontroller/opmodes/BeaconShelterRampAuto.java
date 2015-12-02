@@ -7,12 +7,14 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 
 public class BeaconShelterRampAuto extends LinearOpMode {
 
-    int ENCODER_TICKS_PER_REVOLUTION = 1220;
+    int ENCODER_TICKS_PER_REVOLUTION = 1120;
     int INCHES_PER_TILE = 24;
     double WHEEL_DIAMETER = 4;
-    double WHEEL_CIRCUMFERENCE = Math.PI * WHEEL_DIAMETER;
+    double WHEEL_CIRCUMFERENCE = 3.14159265359 * WHEEL_DIAMETER;
+    double GEAR_RATIO = 11/8;
     int target = 0;
     int initial = 0;
+    int initialtemp = 0;
 
 
     DcMotor motorLeft;
@@ -24,6 +26,8 @@ public class BeaconShelterRampAuto extends LinearOpMode {
     ColorSensor color;
     DcMotorController driveController;
     public ElapsedTime msecClock = new ElapsedTime();
+
+    int timetowait = 500;
 
 
 
@@ -42,33 +46,9 @@ public class BeaconShelterRampAuto extends LinearOpMode {
         //gyro = hardwareMap.gyroSensor.get("gyro");
         //color = hardwareMap.colorSensor.get("color");
 
-        driveController.setMotorControllerDeviceMode(DcMotorController.DeviceMode.READ_ONLY);
-        while(driveController.getMotorControllerDeviceMode() != DcMotorController.DeviceMode.READ_ONLY) {
-            waitOneFullHardwareCycle();
-        }
-        wait1MSec(250);
-
-        initial = motorLeft.getCurrentPosition();
-
-        driveController.setMotorControllerDeviceMode(DcMotorController.DeviceMode.WRITE_ONLY);
-        while(driveController.getMotorControllerDeviceMode() != DcMotorController.DeviceMode.WRITE_ONLY) {
-            waitOneFullHardwareCycle();
-        }
-        wait1MSec(250);
-
-        //driveController.setMotorControllerDeviceMode(DcMotorController.DeviceMode.WRITE_ONLY);
-
         waitForStart();
-        /*telemetry.addData("", "Deciding...");
-        wait1MSec(3000);
-        telemetry.clearData();
-        telemetry.addData("", "The color is" + decideColor());
-        */
-        driveWithEncoders(2, .5);
-        wait1MSec(1000);
-        driveWithEncoders(2, -.5);
 
-
+        driveWithEncoders(1, .5);
 
 
     }
@@ -99,19 +79,27 @@ public class BeaconShelterRampAuto extends LinearOpMode {
             waitOneFullHardwareCycle();
         }
 
-        while(Math.abs(motorLeft.getCurrentPosition() - target) > 5) {
+        wait1MSec(timetowait);
+
+
+        initial = motorLeft.getCurrentPosition();
+
+        while(Math.abs(motorLeft.getCurrentPosition() - initial) < target) {
             telemetry.addData("target", target);
-            telemetry.addData("enc", Math.abs(motorLeft.getCurrentPosition() - target));
+            telemetry.addData("togo", Math.abs(motorLeft.getCurrentPosition() - initial));
+            telemetry.addData("enc", motorLeft.getCurrentPosition());
             telemetry.addData("initial", initial);
-            initial = motorLeft.getCurrentPosition();
+            telemetry.addData("temp", initialtemp);
+            initialtemp = motorLeft.getCurrentPosition();
         }
 
-
+        initial = initialtemp;
 
         driveController.setMotorControllerDeviceMode(DcMotorController.DeviceMode.WRITE_ONLY);
         while(driveController.getMotorControllerDeviceMode() != DcMotorController.DeviceMode.WRITE_ONLY) {
             waitOneFullHardwareCycle();
         }
+        wait1MSec(timetowait);
         setDriveSpeed(0, 0);
 
     }
@@ -133,14 +121,13 @@ public class BeaconShelterRampAuto extends LinearOpMode {
     public void driveWithEncoders(double tiles, double power) throws InterruptedException{
         int multiplier = (int)(power/Math.abs(power));
         int targetPos;
-        int ticks = (int)(((tiles * INCHES_PER_TILE)/WHEEL_CIRCUMFERENCE) * ENCODER_TICKS_PER_REVOLUTION);
-        targetPos = (ticks * multiplier);
-
+        int ticks = (int)(((tiles * INCHES_PER_TILE)/WHEEL_CIRCUMFERENCE) * ENCODER_TICKS_PER_REVOLUTION * GEAR_RATIO);
+        targetPos = (ticks * multiplier)/2;
 
 
         setTarget(targetPos);
         setDriveSpeed(power, power);
-        wait1MSec(100);
+        wait1MSec(timetowait);
         waitForEncoders();
     }
 
