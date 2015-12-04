@@ -195,13 +195,13 @@ public class ResQTeleOP extends OpMode {
         if (Math.abs(winchPower) < DEADZONE){
             motorWinch.setPower(0);
         } else {
-            motorWinch.setPower(winchPower * winchStop);
+            motorWinch.setPower(winchPower);
         }
 
         if(Math.abs(armPower) < DEADZONE) {
             motorArm.setPower(0);
         } else {
-            motorArm.setPower(armPower * armStop);
+            motorArm.setPower(armPower);
         }
 
         ////////////////////////////////////////
