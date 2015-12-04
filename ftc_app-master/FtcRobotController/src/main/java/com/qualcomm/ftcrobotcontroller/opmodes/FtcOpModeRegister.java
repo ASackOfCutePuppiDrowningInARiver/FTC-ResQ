@@ -45,8 +45,12 @@ public class FtcOpModeRegister implements OpModeRegister {
    *
    * @param manager op mode manager
    */
+
+  public static OpModeManager opModeManager;
+
   public void register(OpModeManager manager) {
 
+    opModeManager = manager;
     /*
      * register your op modes here.
      * The first parameter is the name of the op mode

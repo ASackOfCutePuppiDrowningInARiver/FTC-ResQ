@@ -12,7 +12,7 @@ public class BeaconShelterRampAuto extends LinearOpMode {
     double WHEEL_DIAMETER = 4;
     double WHEEL_CIRCUMFERENCE = 3.14159265359 * WHEEL_DIAMETER;
     double GEAR_RATIO = 11/8;
-    int target = 0;
+    double target = 0;
     int initial = 0;
     int initialtemp = 0;
 
@@ -27,7 +27,7 @@ public class BeaconShelterRampAuto extends LinearOpMode {
     DcMotorController driveController;
     public ElapsedTime msecClock = new ElapsedTime();
 
-    int timetowait = 500;
+    int timetowait = 100;
 
 
 
@@ -48,7 +48,7 @@ public class BeaconShelterRampAuto extends LinearOpMode {
 
         waitForStart();
 
-        driveWithEncoders(1, .5);
+        driveWithEncoders(2.3, .5);
 
 
     }
@@ -104,7 +104,7 @@ public class BeaconShelterRampAuto extends LinearOpMode {
 
     }
 
-    public void setTarget(int targetVal) {
+    public void setTarget(double targetVal) {
         target = targetVal + initial;
     }
 
@@ -119,10 +119,10 @@ public class BeaconShelterRampAuto extends LinearOpMode {
 
 
     public void driveWithEncoders(double tiles, double power) throws InterruptedException{
-        int multiplier = (int)(power/Math.abs(power));
-        int targetPos;
-        int ticks = (int)(((tiles * INCHES_PER_TILE)/WHEEL_CIRCUMFERENCE) * ENCODER_TICKS_PER_REVOLUTION * GEAR_RATIO);
-        targetPos = (ticks * multiplier)/2;
+        double multiplier = (power/Math.abs(power));
+        double targetPos;
+        double ticks = (((tiles * INCHES_PER_TILE)/WHEEL_CIRCUMFERENCE) * ENCODER_TICKS_PER_REVOLUTION * GEAR_RATIO);
+        targetPos = (ticks * multiplier)*.9;
 
 
         setTarget(targetPos);

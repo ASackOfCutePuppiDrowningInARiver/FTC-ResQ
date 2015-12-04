@@ -135,13 +135,20 @@ public class ResQTeleOP extends OpMode {
         servoConveyor.setPosition(0.5);
     }
 
+    long startTime = 0;
+
+    @Override
+    public void start() {
+        startTime = System.nanoTime();
+    }
+
 	@Override
 	public void loop() {
 
         //Set the value of joysticks to variables for controlling things by joystick
         //includung drive, arm, winch
 
-        /*
+/*
         if(limitWinch.getState()) {
             winchPower = gamepad2.left_stick_y;
         } else if(!limitWinch.getState() && gamepad2.left_stick_y < 0.15) {
@@ -157,7 +164,7 @@ public class ResQTeleOP extends OpMode {
         } else {
             armPower = 0;
         }
-        */
+*/
 
         armPower = gamepad2.right_stick_y;
         winchPower = gamepad2.left_stick_y;
@@ -188,13 +195,13 @@ public class ResQTeleOP extends OpMode {
         if (Math.abs(winchPower) < DEADZONE){
             motorWinch.setPower(0);
         } else {
-            motorWinch.setPower(winchPower);
+            motorWinch.setPower(winchPower * winchStop);
         }
 
         if(Math.abs(armPower) < DEADZONE) {
             motorArm.setPower(0);
         } else {
-            motorArm.setPower(armPower);
+            motorArm.setPower(armPower * armStop);
         }
 
         ////////////////////////////////////////
@@ -297,6 +304,28 @@ public class ResQTeleOP extends OpMode {
             winchPaul.setPosition(paulEngaged);
         } else {
             winchPaul.setPosition(paulDisengaged);
+        }
+
+        /////////////////////////////////
+        /////////////////////////////////
+        /////////////////////////////////
+
+
+
+        //telemetry
+
+        telemetry.addData("winch", limitWinch.getState());
+        telemetry.addData("arm", limitArm.getState());
+
+        /////////////////////////////////
+        /////////////////////////////////
+        /////////////////////////////////
+
+        //stop code after 2 minutes
+
+        if(System.nanoTime() - startTime > 120E9) {
+            FtcOpModeRegister.opModeManager.stopActiveOpMode();
+            return;
         }
 
 	}
