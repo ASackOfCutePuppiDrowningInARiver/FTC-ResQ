@@ -148,7 +148,7 @@ public class ResQTeleOP extends OpMode {
         //Set the value of joysticks to variables for controlling things by joystick
         //includung drive, arm, winch
 
-/*
+
         if(limitWinch.getState()) {
             winchPower = gamepad2.left_stick_y;
         } else if(!limitWinch.getState() && gamepad2.left_stick_y < 0.15) {
@@ -164,7 +164,7 @@ public class ResQTeleOP extends OpMode {
         } else {
             armPower = 0;
         }
-*/
+
 
         armPower = gamepad2.right_stick_y;
         winchPower = gamepad2.left_stick_y;
