@@ -186,10 +186,7 @@ public class ResQTeleOP extends OpMode {
         } else {
             armPower = 0;
         }
-<<<<<<< HEAD
-=======
 
->>>>>>> origin/master
 
 
         if(gamepad1.y && !yPressedD1) {
