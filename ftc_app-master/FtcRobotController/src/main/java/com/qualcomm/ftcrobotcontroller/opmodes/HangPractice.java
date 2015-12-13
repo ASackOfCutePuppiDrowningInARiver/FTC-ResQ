@@ -32,8 +32,9 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 package com.qualcomm.ftcrobotcontroller.opmodes;
 
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
-import com.qualcomm.robotcore.hardware.*;
-import com.qualcomm.robotcore.robocol.Telemetry;
+import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.DigitalChannel;
+import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 /**
@@ -41,7 +42,7 @@ import com.qualcomm.robotcore.util.ElapsedTime;
  * <p>
  * Enables control of the robot via the gamepad
  */
-public class ResQTeleOP extends OpMode {
+public class HangPractice extends OpMode {
 
     //countdown timer
     ElapsedTime countdown = new ElapsedTime();
@@ -52,7 +53,6 @@ public class ResQTeleOP extends OpMode {
 	DcMotor motorIntake;
     DcMotor motorWinch;
     DcMotor motorArm;
-    DcMotor motorLeftTwo;
 
     //servos
     Servo leftZip;
@@ -61,10 +61,6 @@ public class ResQTeleOP extends OpMode {
     Servo rightBoxDoor;
     Servo leftBoxDoor;
     Servo winchPaul; //;) (pawl)
-
-    //modules
-    LegacyModule legacy;
-    DeviceInterfaceModule cdim;
 
     //hall effect sensors
     DigitalChannel limitWinch;
@@ -110,10 +106,7 @@ public class ResQTeleOP extends OpMode {
     double leftPower = 0;
     double rightPower = 0;
 
-    String legacyStatus = "CONNECTED";
-    String cdimStatus = "CONNECTED";
-
-	public ResQTeleOP() {
+	public HangPractice() {
 	}
 
 	@Override
@@ -123,9 +116,7 @@ public class ResQTeleOP extends OpMode {
 		motorIntake = hardwareMap.dcMotor.get("intake");
         motorWinch = hardwareMap.dcMotor.get("winch");
         motorArm = hardwareMap.dcMotor.get("arm");
-        motorLeftTwo = hardwareMap.dcMotor.get("l2");
         motorLeft.setDirection(DcMotor.Direction.REVERSE);
-        motorLeftTwo.setDirection(DcMotor.Direction.REVERSE);
         motorIntake.setDirection(DcMotor.Direction.REVERSE);
         motorArm.setDirection(DcMotor.Direction.REVERSE);
         leftZip = hardwareMap.servo.get("leftZ");
@@ -138,8 +129,6 @@ public class ResQTeleOP extends OpMode {
         leftBoxDoor = hardwareMap.servo.get("lDoor");
         rightBoxDoor = hardwareMap.servo.get("rDoor");
         winchPaul = hardwareMap.servo.get("paul");
-        legacy = hardwareMap.legacyModule.get("leg");
-        cdim = hardwareMap.deviceInterfaceModule.get("cdim");
     }
 
     @Override
@@ -165,7 +154,7 @@ public class ResQTeleOP extends OpMode {
 
         //COuntdown to end of match
 
-        telemetry.addData("TIME REMAINING", (int)(120 - countdown.time()) + "Seconds");
+        telemetry.addData("TIME REMAINING", (int)(30 - countdown.time()) + "Seconds");
 
         //Set the value of joysticks to variables for controlling things by joystick
         //includung drive, arm, winch
@@ -345,16 +334,11 @@ public class ResQTeleOP extends OpMode {
         /////////////////////////////////
 
         //stop code after 2 minutes
-/*
-        if(System.nanoTime() - startTime > 120E9) {
+
+        if(System.nanoTime() - startTime > 30E9) {
             FtcOpModeRegister.opModeManager.stopActiveOpMode();
             return;
         }
-        */
-
-        telemetry.addData("legacy", legacy.getConnectionInfo());
-        telemetry.addData("cdim", cdim.getConnectionInfo());
-
 	}
 
 	@Override
@@ -363,13 +347,13 @@ public class ResQTeleOP extends OpMode {
 
     public void intake_front() {
 
-        if (Math.abs(rightPower) < DEADZONE) {
-            setLeftPower(0);
+        if (Math.abs(leftPower) < DEADZONE) {
+            motorLeft.setPower(0);
         } else {
-            setLeftPower(-rightPower);
+            motorLeft.setPower(-rightPower);
         }
 
-        if (Math.abs(leftPower) < DEADZONE) {
+        if (Math.abs(rightPower) < DEADZONE) {
             motorRight.setPower(0);
         } else {
             motorRight.setPower(-leftPower);
@@ -379,9 +363,9 @@ public class ResQTeleOP extends OpMode {
 
     public void arm_front() {
         if (Math.abs(leftPower) < DEADZONE) {
-            setLeftPower(0);
+            motorLeft.setPower(0);
         } else {
-            setLeftPower(leftPower);
+            motorLeft.setPower(leftPower);
         }
 
         if (Math.abs(rightPower) < DEADZONE) {
@@ -389,11 +373,6 @@ public class ResQTeleOP extends OpMode {
         } else {
             motorRight.setPower(rightPower);
         }
-    }
-
-    public void setLeftPower(double power) {
-        motorLeft.setPower(power);
-        motorLeftTwo.setPower(power);
     }
 }
 

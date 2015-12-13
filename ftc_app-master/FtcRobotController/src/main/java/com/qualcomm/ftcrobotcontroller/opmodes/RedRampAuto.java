@@ -1,11 +1,14 @@
 package com.qualcomm.ftcrobotcontroller.opmodes;
 
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
-import com.qualcomm.robotcore.hardware.*;
+import com.qualcomm.robotcore.hardware.ColorSensor;
+import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.DcMotorController;
+import com.qualcomm.robotcore.hardware.GyroSensor;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 
-public class BeaconShelterRampAuto extends LinearOpMode {
+public class RedRampAuto extends LinearOpMode {
 
     int ENCODER_TICKS_PER_REVOLUTION = 1120;
     int INCHES_PER_TILE = 24;
@@ -27,11 +30,7 @@ public class BeaconShelterRampAuto extends LinearOpMode {
     DcMotorController driveController;
     DcMotorController encoderController;
     DcMotor leftEncoder;
-    DcMotor armEncoder;
-    DigitalChannel limitWinch;
-    DigitalChannel limitArm;
     public ElapsedTime msecClock = new ElapsedTime();
-    public ElapsedTime auxClock = new ElapsedTime();
 
     int timetowait = 100;
 
@@ -44,9 +43,9 @@ public class BeaconShelterRampAuto extends LinearOpMode {
 
         motorRight = hardwareMap.dcMotor.get("rightMotor");
         motorLeft = hardwareMap.dcMotor.get("leftMotor");
-        motorIntake = hardwareMap.dcMotor.get("intake");
-        motorWinch = hardwareMap.dcMotor.get("winch");
-        motorArm = hardwareMap.dcMotor.get("arm");
+        //motorIntake = hardwareMap.dcMotor.get("intake");
+        //motorWinch = hardwareMap.dcMotor.get("winch");
+        //motorArm = hardwareMap.dcMotor.get("arm");
         motorLeft.setDirection(DcMotor.Direction.REVERSE);
         encoderController = hardwareMap.dcMotorController.get("MC5");
         driveController = hardwareMap.dcMotorController.get("MC0");
@@ -62,25 +61,14 @@ public class BeaconShelterRampAuto extends LinearOpMode {
         waitForStart();
 
         while(opModeIsActive() && !opModeEnd) {
-            driveWithEncoders(6.5, .7, true);
-            wait1MSec(1000);
-            turnWithGyro(-135);
-            telemetry.addData("", "TURN CLEARED");
-            wait1MSec(1000);
-            driveWithEncoders(0.5, -0.5, false);
-            telemetry.addData("","ALIGNMENT COMPLETE");
-            //dumpClimbers();
-            //insert color code
-            /*
             driveWithEncoders(1,.5);
-            turnWithGyro(90);
-            driveWithEncoders(1.25,.5);
-            turnWithGyro(35);
-            driveWithEncoders(1,1);
-            */
+            turnWithGyro(-35);
+            driveWithEncoders(1.5, .5);
+            turnWithGyro(-90);
+            driveWithEncoders(1.5, 1);
+
 
             opModeEnd = true;
-            telemetry.addData("", "TASK COMPLETED");
         }
 
 
@@ -94,7 +82,7 @@ public class BeaconShelterRampAuto extends LinearOpMode {
         motorRight.setPower(right);
     }
 
-    public void waitForEncoders(double power, boolean intake)/* throws InterruptedException*/{
+    public void waitForEncoders(double power)/* throws InterruptedException*/{
 /*
         driveController.setMotorControllerDeviceMode(DcMotorController.DeviceMode.READ_ONLY);
         while(driveController.getMotorControllerDeviceMode() != DcMotorController.DeviceMode.READ_ONLY) {
@@ -114,9 +102,7 @@ public class BeaconShelterRampAuto extends LinearOpMode {
             telemetry.addData("temp", initialtemp);
             initialtemp = leftEncoder.getCurrentPosition();
             setDriveSpeed(power, power);
-            if(intake) {
-                motorIntake.setPower(.5);
-            }
+
         }
 
         initial = initialtemp;
@@ -128,7 +114,6 @@ public class BeaconShelterRampAuto extends LinearOpMode {
         wait1MSec(timetowait);
         */
         setDriveSpeed(0, 0);
-        motorIntake.setPower(0);
 
     }
 
@@ -140,44 +125,13 @@ public class BeaconShelterRampAuto extends LinearOpMode {
         msecClock.reset();
         while((msecClock.time() * 1000) < (msec + 1)) {
 
-
         }
 
     }
-    public void dumpClimbers (){
-
-        resetAux();
-
-        int armInitial = armEncoder.getCurrentPosition();
-        while(Math.abs(armEncoder.getCurrentPosition() - armInitial) < 1400 && opModeIsActive()) {
-            motorArm.setPower(-0.7);
-        }
-        //4 rotations for a quarter
-        wait1MSec(500);
-
-        resetAux();
-
-        while (auxClock.time() < 3 && opModeIsActive()) {
-            motorWinch.setPower(.7);
-        }
-
-        while (armInitial < 5000 && opModeIsActive()) {
-            motorWinch.setPower(.5);
-        }
-
-        wait1MSec(1000);
-
-        /*if (t < 2.9) {
-            motorWinch.setPower(-.5);
-        }
-        if (Anitial > 1) {
-            motorWinch.setPower(-.5);
-        }*/
-    }
 
 
 
-    public void driveWithEncoders(double tiles, double power, boolean intakeOn) throws InterruptedException{
+    public void driveWithEncoders(double tiles, double power) throws InterruptedException{
         double multiplier = (power/Math.abs(power));
         double targetPos;
         double ticks = (((tiles * INCHES_PER_TILE)/WHEEL_CIRCUMFERENCE) * ENCODER_TICKS_PER_REVOLUTION * GEAR_RATIO);
@@ -185,37 +139,30 @@ public class BeaconShelterRampAuto extends LinearOpMode {
 
 
         setTarget(targetPos);
-        waitForEncoders(power, intakeOn);
+        waitForEncoders(power);
     }
 
     public void turnWithGyro(int degreesToTurn) throws InterruptedException{
-        double MOTOR_POWER = 0.75;
+        double MOTOR_POWER = 0.5;
         double degreesTurned = 0;
         double initial = gyro.getRotation();
 
-        while(Math.abs(degreesTurned) < Math.abs(degreesToTurn) && opModeIsActive()) {
+        while(Math.abs(degreesTurned) < Math.abs(degreesToTurn)) {
             sleep(20);
 
             double rotSpeed = (gyro.getRotation() - initial) * .02;
             degreesTurned += rotSpeed;
 
-            motorLeft.setPower(MOTOR_POWER);
-            motorRight.setPower(-MOTOR_POWER);
-
-            initialtemp = leftEncoder.getCurrentPosition();//Keep track of encoder positionfor moving after turns
+            motorLeft.setPower(-MOTOR_POWER);
+            motorRight.setPower(MOTOR_POWER);
         }
         setDriveSpeed(0, 0);
-        initial = initialtemp;
     }
 
     public void checkForStop() {
         if(!opModeIsActive()) {
             FtcOpModeRegister.opModeManager.stopActiveOpMode();
         }
-    }
-
-    public void resetAux() {
-        auxClock.reset();
     }
 
 }
