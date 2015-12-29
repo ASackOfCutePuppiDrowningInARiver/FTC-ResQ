@@ -36,6 +36,14 @@ public class LoopAutoTest extends OpMode {
     double target = 0;
     int initial = 0;
     int initialtemp = 0;
+    int previousLeftEncoder = 0;
+    int currentLeftEncoder = 0;
+    int previousRightEncoder = 0;
+    int currentRightEncoder = 0;
+
+    private boolean firstLoop = true;
+    private int degreesTurned = 0;
+    private int degreesTurnedThisLoop = 0;
 
     //----------------------------------------------------------------------------------------------
     //
@@ -71,6 +79,10 @@ public class LoopAutoTest extends OpMode {
 
     DcMotor motorLeftTwo;
 
+    private PathSegment beaconPath[] = {
+            new PathSegment(60, 60, 0.5)
+    };
+
     @Override
     public void init() {
 
@@ -95,8 +107,8 @@ public class LoopAutoTest extends OpMode {
 
     @Override
     public void init_loop() {
-        motorLeftTwo.setTargetPosition(5000);
-        motorLeftTwo.setMode(DcMotorController.RunMode.RUN_TO_POSITION);
+        motorRight.setMode(DcMotorController.RunMode.RUN_TO_POSITION);
+        motorLeft.setMode(DcMotorController.RunMode.RUN_TO_POSITION);
     }
 
     @Override
@@ -108,26 +120,27 @@ public class LoopAutoTest extends OpMode {
     @Override
     public void loop() {
 
-        motorLeftTwo.setPower(0.5);
 
 
 
-/*
+
+
         switch(currentState) {
 
             case INIT:
 
-                
+                startPath(beaconPath);
+                newState(STATES.DRIVE_TO_BEACON);
 
                 break;
 
             case DRIVE_TO_BEACON:
 
-
+                if(pathComplete()) {
+                    setDrivePower(0, 0);
+                }
                 break;
-
         }
-*/
     }
 
     @Override
@@ -141,8 +154,9 @@ public class LoopAutoTest extends OpMode {
         currentState = newState;
     }
 
-    public void setDrivePower(double power) {
-
+    public void setDrivePower(double powerL, double powerR) {
+        motorLeft.setPower(powerL);
+        motorRight.setPower(powerR);
     }
 
     private void addEncoderTarget(int leftEncoder, int rightEncoder) {
@@ -151,7 +165,7 @@ public class LoopAutoTest extends OpMode {
     }
 
     //wants to go, check if encoders are at position, and then switch to write mode.
-
+/*
     public void driveWithEncoders (int target) {
         boolean there = false;
         addEncoderTarget(target, target);
@@ -165,7 +179,7 @@ public class LoopAutoTest extends OpMode {
             encoderController.setMotorControllerDeviceMode(DcMotorController.DeviceMode.READ_ONLY);
         }
         if (there) {
-            setDrivePower(0);
+            setDrivePower(0, 0);
         }
     }
 
@@ -193,7 +207,7 @@ public class LoopAutoTest extends OpMode {
         }
 
         if (there) {
-            setDrivePower(0);
+            setDrivePower(0, 0);
         }
     }
     public void driveWithEncoders2 (int target) {
@@ -202,18 +216,10 @@ public class LoopAutoTest extends OpMode {
         read();
         finish();
     }
-
+*/
     public void dumpClimbers () {
 
     }
-
-
-    private boolean moveComplete() {
-        //return ((Math.abs()))
-        return false;
-    }
-
-
 
     private void startPath(PathSegment[] path) {
         currentPath = path;
@@ -231,15 +237,69 @@ public class LoopAutoTest extends OpMode {
             left = (int)(currentPath[currentSegment].mLeft);
             right = (int)(currentPath[currentSegment].mRight);
             addEncoderTarget(left, right);
-            //setDrivePower(currentPath[currentSegment].mSpeed, currentPath[currentSegment].mSpeed);
-
+            setDrivePower(currentPath[currentSegment].mSpeed, currentPath[currentSegment].mSpeed);
             currentSegment++;
+            driveController.setMotorControllerDeviceMode(DcMotorController.DeviceMode.READ_ONLY);
+
         }
     }
 
+    private boolean moveComplete() {
+
+        boolean leftIsDone = false;
+        boolean rightIsDone = false;
+
+        if(driveController.getMotorControllerDeviceMode() == DcMotorController.DeviceMode.READ_ONLY) {
+            currentLeftEncoder = motorLeft.getCurrentPosition();
+            currentRightEncoder = motorRight.getCurrentPosition();
+
+            if(Math.abs(currentLeftEncoder - previousLeftEncoder) < 3) {
+                leftIsDone = true;
+            }
+
+            if(Math.abs(currentRightEncoder - previousRightEncoder) < 3) {
+                rightIsDone = true;
+            }
+        }
+
+        if((leftIsDone && rightIsDone) && driveController.getMotorControllerDeviceMode() != DcMotorController.DeviceMode.WRITE_ONLY) {
+            driveController.setMotorControllerDeviceMode(DcMotorController.DeviceMode.WRITE_ONLY);
+        }
+
+        return ((leftIsDone && rightIsDone) &&  driveController.getMotorControllerDeviceMode() == DcMotorController.DeviceMode.WRITE_ONLY);
+    }
+
     private boolean pathComplete() {
-        //if
+        if(moveComplete()) {
+
+            if(currentSegment < currentPath.length) {
+                startSegment();
+            } else {
+                currentPath = null;
+                currentSegment = 0;
+                setDrivePower(0, 0);
+                return true;
+            }
+        }
+
         return false;
+    }
+
+    private void turn(rotationSwag rot) {
+
+        if(firstLoop) {
+            firstLoop = false;
+            turnClock.reset();
+            degreesTurned = 0;
+            degreesTurnedThisLoop = 0;
+        }
+        setDrivePower(rot.speed, -rot.speed);
+        degreesTurnedThisLoop = (int)(gyro.getRotation() * turnClock.time());
+        degreesTurned += degreesTurnedThisLoop;
+    }
+
+    private boolean turnComplete(rotationSwag rot) {
+        return (degreesTurned >= rot.degreesToTurn);
     }
 
 
@@ -257,4 +317,14 @@ class PathSegment {
         mSpeed = speed;
     }
 
+}
+
+class rotationSwag{
+    public int degreesToTurn;
+    public double speed;
+
+    public rotationSwag(int degreesTT, double power) {
+        degreesToTurn = degreesTT;
+        speed = power;
+    }
 }
