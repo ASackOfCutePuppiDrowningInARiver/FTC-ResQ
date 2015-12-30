@@ -52,7 +52,6 @@ public class ResQTeleOP extends OpMode {
 	DcMotor motorIntake;
     DcMotor motorWinch;
     DcMotor motorArm;
-    DcMotor motorLeftTwo;
 
     //servos
     Servo leftZip;
@@ -123,9 +122,7 @@ public class ResQTeleOP extends OpMode {
 		motorIntake = hardwareMap.dcMotor.get("intake");
         motorWinch = hardwareMap.dcMotor.get("winch");
         motorArm = hardwareMap.dcMotor.get("arm");
-        motorLeftTwo = hardwareMap.dcMotor.get("l2");
         motorLeft.setDirection(DcMotor.Direction.REVERSE);
-        motorLeftTwo.setDirection(DcMotor.Direction.REVERSE);
         motorIntake.setDirection(DcMotor.Direction.REVERSE);
         motorArm.setDirection(DcMotor.Direction.REVERSE);
         leftZip = hardwareMap.servo.get("leftZ");
@@ -365,9 +362,9 @@ public class ResQTeleOP extends OpMode {
     public void intake_front() {
 
         if (Math.abs(rightPower) < DEADZONE) {
-            setLeftPower(0);
+            motorLeft.setPower(0);
         } else {
-            setLeftPower(-rightPower);
+            motorLeft.setPower(-rightPower);
         }
 
         if (Math.abs(leftPower) < DEADZONE) {
@@ -380,9 +377,9 @@ public class ResQTeleOP extends OpMode {
 
     public void arm_front() {
         if (Math.abs(leftPower) < DEADZONE) {
-            setLeftPower(0);
+            motorLeft.setPower(0);
         } else {
-            setLeftPower(leftPower);
+            motorLeft.setPower(leftPower);
         }
 
         if (Math.abs(rightPower) < DEADZONE) {
@@ -390,11 +387,6 @@ public class ResQTeleOP extends OpMode {
         } else {
             motorRight.setPower(rightPower);
         }
-    }
-
-    public void setLeftPower(double power) {
-        motorLeft.setPower(power);
-        motorLeftTwo.setPower(power);
     }
 }
 
