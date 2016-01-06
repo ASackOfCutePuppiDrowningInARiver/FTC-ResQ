@@ -68,7 +68,6 @@ public class LoopAutoTest extends OpMode {
     DcMotor motorArm;
     GyroSensor gyro;
     ColorSensor color;
-    DcMotorController driveController;
 
     DigitalChannel limitWinch;
     DigitalChannel limitArm;
@@ -97,7 +96,7 @@ public class LoopAutoTest extends OpMode {
         limitWinch = hardwareMap.digitalChannel.get("winchLimit");
         limitArm = hardwareMap.digitalChannel.get("armLimit");
         gyro = hardwareMap.gyroSensor.get("gyro");
-        driveController = hardwareMap.dcMotorController.get("MC0");
+        resetDriveEncoders();
     }
 
     @Override
@@ -105,27 +104,31 @@ public class LoopAutoTest extends OpMode {
         motorRight.setMode(DcMotorController.RunMode.RUN_TO_POSITION);
         motorLeft.setMode(DcMotorController.RunMode.RUN_TO_POSITION);
         gyroCalibrate = (int)gyro.getRotation();
-        telemetry.addData("Mode", driveController.getMotorControllerDeviceMode());
+        telemetry.addData("Enc", String.format("L %5d - R %5d ", getLeftPosition(), getRightPosition()));
+        resetDriveEncoders();
     }
 
     @Override
     public void start() {
         runTime.reset();
-        //newState(STATES.DRIVE_TO_BEACON);
-        //startPath(beaconPath);
-        addEncoderTarget(5000, 5000);
+        setDrivePower(0, 0);
+        runToPosition();
+        newState(STATES.INIT);
+        startPath(beaconPath);
     }
 
     @Override
     public void loop() {
-    /*
+
         switch(currentState) {
 
             case INIT:
-
-                startPath(beaconPath);
-                newState(STATES.DRIVE_TO_BEACON);
-
+                if(encodersAtZero()) {
+                    startPath(beaconPath);
+                    newState(STATES.DRIVE_TO_BEACON);
+                } else {
+                    telemetry.addData("Enc", String.format("L %5d - R %5d ", getLeftPosition(), getRightPosition() ));
+                }
                 break;
 
             case DRIVE_TO_BEACON:
@@ -136,25 +139,16 @@ public class LoopAutoTest extends OpMode {
                     newState(STATES.TURN_TO_BEACON);
                 } else {
 
-                    telemetry.addData("", "State: " + currentState + ", Time: " + stateTime.time() + ", Mode: " + driveController.getMotorControllerDeviceMode() + "seg" + currentSegment + "path" + currentPath);
+                    telemetry.addData("", "State: " + currentState + ", Time: " + stateTime.time() + "seg" + currentSegment + "path" + currentPath);
                 }
-                telemetry.addData("State", currentState);
-                telemetry.addData("Path", currentPath);
-                telemetry.addData("Segment", currentSegment);
-                telemetry.addData("Time", stateTime.time());
-                telemetry.addData("Mode", driveController.getMotorControllerDeviceMode());
-
-
                 break;
+
             case TURN_TO_BEACON:
                 if(turnComplete()) {
                     setDrivePower(0, 0);
                     newState(STATES.STOP);
                 }
         }
-    */
-        motorLeft.setPower(0.5);
-        motorRight.setPower(0.5);
     }
 
     @Override
@@ -173,17 +167,74 @@ public class LoopAutoTest extends OpMode {
         motorRight.setPower(powerR);
     }
 
+    void setEncoderTarget(int leftEncoder, int rightEncoder) {
+        motorLeft.setTargetPosition(leftEncoderTarget = leftEncoder);
+        motorRight.setTargetPosition(rightEncoderTarget = rightEncoder);
+    }
+
     private void addEncoderTarget(int leftEncoder, int rightEncoder) {
         motorLeft.setTargetPosition(leftEncoderTarget += leftEncoder);
         motorRight.setTargetPosition(rightEncoderTarget += rightEncoder);
     }
 
+    void syncEncoders()
+    {
+        leftEncoderTarget = motorLeft.getCurrentPosition();
+        rightEncoderTarget = motorRight.getCurrentPosition();
+    }
+
+    boolean encodersAtZero()
+    {
+        return ((Math.abs(getLeftPosition()) < 5) && (Math.abs(getRightPosition()) < 5));
+    }
+
+
+    public void runToPosition()
+    {
+        setDriveMode(DcMotorController.RunMode.RUN_TO_POSITION);
+    }
+
+    public void useConstantSpeed()
+    {
+        setDriveMode(DcMotorController.RunMode.RUN_USING_ENCODERS);
+    }
+
+    public void useConstantPower()
+    {
+        setDriveMode(DcMotorController.RunMode.RUN_WITHOUT_ENCODERS);
+    }
+
+    public void resetDriveEncoders()
+    {
+        setEncoderTarget(0, 0);
+        setDriveMode(DcMotorController.RunMode.RESET_ENCODERS);
+    }
+
+    public void setDriveMode(DcMotorController.RunMode mode)
+    {
+        // Ensure the motors are in the correct mode.
+        if (motorLeft.getMode() != mode)
+            motorLeft.setMode(mode);
+
+        if (motorRight.getMode() != mode)
+            motorRight.setMode(mode);
+    }
+
+    int getLeftPosition()
+    {
+        return motorLeft.getCurrentPosition();
+    }
+
+    int getRightPosition()
+    {
+        return motorRight.getCurrentPosition();
+    }
 
     private void startPath(PathSegment[] path) {
         currentPath = path;
         currentSegment = 0;
-        //syncEncoders
-        //runtoposition
+        syncEncoders();
+        runToPosition();
         startSegment();
     }
 
@@ -197,40 +248,13 @@ public class LoopAutoTest extends OpMode {
             addEncoderTarget(left, right);
             setDrivePower(currentPath[currentSegment].mSpeed, currentPath[currentSegment].mSpeed);
             currentSegment++;
-            driveController.setMotorControllerDeviceMode(DcMotorController.DeviceMode.READ_ONLY);
-
         }
     }
 
     private boolean moveComplete() {
-
-        boolean leftIsDone = false;
-        boolean rightIsDone = false;
-
-        if(driveController.getMotorControllerDeviceMode() == DcMotorController.DeviceMode.READ_ONLY) {
-            currentLeftEncoder = motorLeft.getCurrentPosition();
-            currentRightEncoder = motorRight.getCurrentPosition();
-
-            if(Math.abs(currentLeftEncoder - previousLeftEncoder) < 3) {
-                leftIsDone = true;
-            }
-
-            if(Math.abs(currentRightEncoder - previousRightEncoder) < 3) {
-                rightIsDone = true;
-            }
-
-            previousLeftEncoder = currentLeftEncoder;
-            previousRightEncoder = currentRightEncoder;
-
-        } else {
-            driveController.setMotorControllerDeviceMode(DcMotorController.DeviceMode.READ_ONLY);
-        }
-
-        if((leftIsDone && rightIsDone) && driveController.getMotorControllerDeviceMode() != DcMotorController.DeviceMode.WRITE_ONLY) {
-            driveController.setMotorControllerDeviceMode(DcMotorController.DeviceMode.WRITE_ONLY);
-        }
-
-        return ((leftIsDone && rightIsDone) &&  driveController.getMotorControllerDeviceMode() == DcMotorController.DeviceMode.WRITE_ONLY);
+        //  return (!mLeftMotor.isBusy() && !mRightMotor.isBusy());
+        return ((Math.abs(getLeftPosition() - leftEncoderTarget) < 10) &&
+                (Math.abs(getRightPosition() - rightEncoderTarget) < 10));
     }
 
     private boolean pathComplete() {
