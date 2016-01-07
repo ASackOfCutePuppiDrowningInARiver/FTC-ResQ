@@ -15,7 +15,6 @@ public class LoopAutoTest extends OpMode {
     public enum STATES {
         INIT,
         DRIVE_TO_BEACON,
-        TURN_TO_BEACON,
         PREPARE_EXTENSION,
         EXTEND_ARM,
         DEPLOY_ARM,
@@ -34,16 +33,7 @@ public class LoopAutoTest extends OpMode {
     double WHEEL_CIRCUMFERENCE = 3.14159265359 * WHEEL_DIAMETER;
     double GEAR_RATIO = 11/8;
     int ENCODER_TICKS_PER_INCH = (int)((ENCODER_TICKS_PER_REVOLUTION/WHEEL_CIRCUMFERENCE) * GEAR_RATIO);
-    int previousLeftEncoder = 0;
-    int currentLeftEncoder = 0;
-    int previousRightEncoder = 0;
-    int currentRightEncoder = 0;
 
-    private boolean firstLoop = true;
-    private int degreesTurned = 0;
-    private int degreesTurnedThisLoop = 0;
-    private int gyroCalibrate = 0;
-    private rotationSwag currentTurn;
 
     //----------------------------------------------------------------------------------------------
     //
@@ -72,14 +62,13 @@ public class LoopAutoTest extends OpMode {
     DigitalChannel limitWinch;
     DigitalChannel limitArm;
 
+    double gyroCalibrate;
+
     private PathSegment beaconPath[] = {
-            new PathSegment(60, 60, 0.5)
+            new PathSegment(60, 0.5), //drive to beacon
+            new PathSegment(-135) //turn so that the arm is facing the beacon area
     };
 
-    private rotationSwag beaconTurn =  new rotationSwag(-135, 0.5);
-
-    private boolean rightReady = false;
-    private boolean leftReady = false;
 
     @Override
     public void init() {
@@ -135,19 +124,23 @@ public class LoopAutoTest extends OpMode {
 
                 if(pathComplete()) {
                     setDrivePower(0, 0);
-                    startTurn(beaconTurn);
-                    newState(STATES.TURN_TO_BEACON);
+                    newState(STATES.STOP);
                 } else {
-
                     telemetry.addData("", "State: " + currentState + ", Time: " + stateTime.time() + "seg" + currentSegment + "path" + currentPath);
+
+                    //if on the way to beacon, run outtake to get debris out the way
+                    if(currentSegment == 1) {
+                        motorIntake.setPower(-1);
+                    } else {
+                        motorIntake.setPower(0);
+                    }
                 }
                 break;
+/////////////////implement more states
 
-            case TURN_TO_BEACON:
-                if(turnComplete()) {
-                    setDrivePower(0, 0);
-                    newState(STATES.STOP);
-                }
+            case STOP:
+                setDrivePower(0, 0);
+                useConstantPower();
         }
     }
 
@@ -187,7 +180,6 @@ public class LoopAutoTest extends OpMode {
     {
         return ((Math.abs(getLeftPosition()) < 5) && (Math.abs(getRightPosition()) < 5));
     }
-
 
     public void runToPosition()
     {
@@ -243,22 +235,36 @@ public class LoopAutoTest extends OpMode {
         int right;
 
         if(currentPath != null) {
-            left = (int)(currentPath[currentSegment].mLeft * ENCODER_TICKS_PER_INCH);
-            right = (int)(currentPath[currentSegment].mRight * ENCODER_TICKS_PER_INCH);
-            addEncoderTarget(left, right);
-            setDrivePower(currentPath[currentSegment].mSpeed, currentPath[currentSegment].mSpeed);
+            if(!currentPath[currentSegment].isTurning) {
+                left = (int) (currentPath[currentSegment].mLeft * ENCODER_TICKS_PER_INCH);
+                right = (int) (currentPath[currentSegment].mRight * ENCODER_TICKS_PER_INCH);
+                addEncoderTarget(left, right);
+                setDrivePower(currentPath[currentSegment].mSpeed, currentPath[currentSegment].mSpeed);
+            } else {
+                setDrivePower(currentPath[currentSegment].mSpeed * currentPath[currentSegment].turnDirection, -(currentPath[currentSegment].mSpeed * currentPath[currentSegment].turnDirection));
+                turnClock.reset();
+            }
             currentSegment++;
         }
     }
 
     private boolean moveComplete() {
-        //  return (!mLeftMotor.isBusy() && !mRightMotor.isBusy());
-        return ((Math.abs(getLeftPosition() - leftEncoderTarget) < 10) &&
-                (Math.abs(getRightPosition() - rightEncoderTarget) < 10));
+        if(!currentPath[currentSegment].isTurning) {
+            //  return (!mLeftMotor.isBusy() && !mRightMotor.isBusy()); use when isBusy is fixed, currently fixed in beta version, this code not yet updated
+            return ((Math.abs(getLeftPosition() - leftEncoderTarget) < 10) && (Math.abs(getRightPosition() - rightEncoderTarget) < 10));
+        } else {
+            currentPath[currentSegment].rotSpeed = (turnClock.time() - currentPath[currentSegment].previousTime) * (gyro.getRotation() - gyroCalibrate);
+            currentPath[currentSegment].degreesTurned += currentPath[currentSegment].rotSpeed;
+            return (Math.abs(currentPath[currentSegment].degreesTurned) >= Math.abs(currentPath[currentSegment].degreesToTurn));
+        }
     }
 
     private boolean pathComplete() {
         if(moveComplete()) {
+
+            if(currentPath[currentSegment].isTurning) {
+                setDrivePower(0, 0);
+            }
 
             if(currentSegment < currentPath.length) {
                 startSegment();
@@ -272,29 +278,6 @@ public class LoopAutoTest extends OpMode {
 
         return false;
     }
-
-    private void startTurn(rotationSwag rot) {
-        turnClock.reset();
-        degreesTurned = 0;
-        degreesTurnedThisLoop = 0;
-        setDrivePower(rot.speed, -rot.speed);
-        currentTurn = rot;
-    }
-
-    private boolean turnComplete() {
-        degreesTurnedThisLoop = (int)((gyro.getRotation() - gyroCalibrate) * turnClock.time());
-        degreesTurned += degreesTurnedThisLoop;
-
-        if(Math.abs(degreesTurned) >= Math.abs(currentTurn.degreesToTurn)) {
-            currentTurn = null;
-            return true;
-        }
-
-        return false;
-    }
-
-
-
 }
 
 class PathSegment {
@@ -302,23 +285,24 @@ class PathSegment {
     public double mLeft;
     public double mRight;
     public double mSpeed;
+    public double degreesToTurn;
+    public boolean isTurning;
+    public double turnDirection;
+    public double degreesTurned = 0;
+    public double previousTime = 0;
+    public double rotSpeed = 0;
 
-    public PathSegment(double left, double right, double speed) {
-        mLeft = left;
-        mRight = right;
+    public PathSegment(double inches, double speed) {
+        mLeft = inches;
+        mRight = inches;
         mSpeed = speed;
-    }
-}
-
-class rotationSwag{
-    public int degreesToTurn;
-    public double speed;
-
-    public rotationSwag(int degreesTT, double power) {
-        degreesToTurn = degreesTT;
-        speed = power * (degreesTT/Math.abs(degreesTT));
-
+        isTurning = false;
     }
 
-
+    public PathSegment(double degrees) {
+        degreesToTurn = degrees;
+        mSpeed = 0.5;
+        isTurning = true;
+        turnDirection = degreesToTurn/Math.abs(degreesToTurn);
+    }
 }
