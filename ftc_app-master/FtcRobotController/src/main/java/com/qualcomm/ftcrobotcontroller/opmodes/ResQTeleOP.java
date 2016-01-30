@@ -350,8 +350,7 @@ public class ResQTeleOP extends OpMode {
         }
         */
 
-        telemetry.addData("legacy", legacy.getConnectionInfo());
-        telemetry.addData("cdim", cdim.getConnectionInfo());
+        telemetry.addData("arm", limitArm.getState());
 
 	}
 

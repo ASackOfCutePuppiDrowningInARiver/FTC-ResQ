@@ -1,23 +1,25 @@
 package com.qualcomm.ftcrobotcontroller.opmodes;
 
-import android.graphics.Path;
-
-import com.qualcomm.robotcore.hardware.*;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
+import com.qualcomm.robotcore.hardware.ColorSensor;
+import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.DcMotorController;
+import com.qualcomm.robotcore.hardware.DigitalChannel;
+import com.qualcomm.robotcore.hardware.GyroSensor;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
-public class LoopAutoTest extends OpMode {
+public class Winch_Test extends OpMode {
 
     //----------------------------------------------------------------------------------------------
     // States for state machine
     //----------------------------------------------------------------------------------------------
 
     public enum STATES {
-        INIT,
-        DRIVE_TO_BEACON,
-        TURN_TO_BEACON,
-        APPROACH_BEACON,
-        STOP
+        RUN,
+        WINCH,
+        STOP,
+
+
     }
 
     //----------------------------------------------------------------------------------------------
@@ -68,14 +70,12 @@ public class LoopAutoTest extends OpMode {
     private int armPrepare = 100;
     private int armDeploy = 300;
 
-    private PathSegment beaconPath[] = {
-            new PathSegment(147, 0.5), //drive to beacon
-            //new PathSegment(20, -0.5)
+    private boolean Winch_Done;
+
+    private PathSegment Run[] = {
+      new PathSegment (24, .5)
     };
 
-    private PathSegment approach[] = {
-            new PathSegment(-15, 0.5)
-    };
 
 
 
@@ -111,8 +111,9 @@ public class LoopAutoTest extends OpMode {
         runTime.reset();
         setDrivePower(0, 0);
         runToPosition();
-        newState(STATES.DRIVE_TO_BEACON);
-        startPath(beaconPath);
+        startPath(Run);
+        newState(STATES.RUN);
+
     }
 
     @Override
@@ -120,59 +121,30 @@ public class LoopAutoTest extends OpMode {
 
         switch(currentState) {
 
-            case INIT:
-                if(encodersAtZero()) {
-                    startPath(beaconPath);
-                    newState(STATES.DRIVE_TO_BEACON);
-                    telemetry.addData("INIT", "GOOD");
-                } else {
-                    telemetry.addData("Enc", String.format("L %5d - R %5d ", getLeftPosition(), getRightPosition() ));
-                }
-                break;
-
-            case DRIVE_TO_BEACON:
-
-                if(pathComplete()) {
-                    setDrivePower(0, 0);
-                    newState(STATES.TURN_TO_BEACON);
-                    turn(145);
-                    motorIntake.setPower(0);
-                } else {
-                    if(currentSegment == 1) {
-                        motorIntake.setPower(-1);
-                    } else {
-                        motorIntake.setPower(0);
-                    }
-                }
-                break;
-
-            case TURN_TO_BEACON:
-
-                if(turnComplete()) {
-                    setDrivePower(0, 0);
-                    newState(STATES.APPROACH_BEACON);
-                    startPath(approach);
-                } else {
-                    calculateTurn();
+            case RUN:
+                if (encodersAtZero()) {
+                    setDrivePower(0,0);
+                    newState(STATES.WINCH);
+                    winch(2);
+                    telemetry.addData("winch", "good");
                 }
 
-                break;
-
-            case APPROACH_BEACON:
-
-                if(pathComplete()) {
-                    setDrivePower(0, 0);
-                    newState(STATES.STOP);
-                } else {
-
-                }
             break;
 
+            case WINCH:
+                if (Winch_Done) {
+                    Winch_Done = false;
+                    newState(STATES.STOP);
+                }
 
             case STOP:
-                setDrivePower(0, 0);
                 useConstantPower();
+                setDrivePower(0, 0);
+                telemetry.addData("mission", "success");
                 break;
+
+
+
         }
 
         telemetry.addData("state", currentState);
@@ -357,20 +329,14 @@ public class LoopAutoTest extends OpMode {
         TURN_POWER = 0;
     }
 
-}
+    private void winch(double seconds) {
+        double extend = time + seconds;
+        while (time < extend) {
+            motorWinch.setPower(.5);
+        }
+        Winch_Done = true;
 
-class PathSegment {
-
-    public double mLeft;
-    public double mRight;
-    public double mSpeed;
-
-    public PathSegment(double inches, double speed) {
-        mLeft = inches;
-        mRight = inches;
-        mSpeed = speed;
     }
-
 
 }
 

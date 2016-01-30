@@ -1,22 +1,23 @@
 package com.qualcomm.ftcrobotcontroller.opmodes;
 
-import android.graphics.Path;
-
-import com.qualcomm.robotcore.hardware.*;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
+import com.qualcomm.robotcore.hardware.ColorSensor;
+import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.DcMotorController;
+import com.qualcomm.robotcore.hardware.DigitalChannel;
+import com.qualcomm.robotcore.hardware.GyroSensor;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
-public class LoopAutoTest extends OpMode {
+public class test_arm extends OpMode {
 
     //----------------------------------------------------------------------------------------------
     // States for state machine
     //----------------------------------------------------------------------------------------------
 
     public enum STATES {
-        INIT,
-        DRIVE_TO_BEACON,
-        TURN_TO_BEACON,
-        APPROACH_BEACON,
+
+        //
+        ARM,
         STOP
     }
 
@@ -27,8 +28,8 @@ public class LoopAutoTest extends OpMode {
     int ENCODER_TICKS_PER_REVOLUTION = 1120;
     double WHEEL_DIAMETER = 4;
     double WHEEL_CIRCUMFERENCE = 3.14159265359 * WHEEL_DIAMETER;
-    double GEAR_RATIO = 11/8;
-    int ENCODER_TICKS_PER_INCH = (int)((ENCODER_TICKS_PER_REVOLUTION/WHEEL_CIRCUMFERENCE) * GEAR_RATIO);
+    double GEAR_RATIO = 11 / 8;
+    int ENCODER_TICKS_PER_INCH = (int) ((ENCODER_TICKS_PER_REVOLUTION / WHEEL_CIRCUMFERENCE) * GEAR_RATIO);
 
 
     //----------------------------------------------------------------------------------------------
@@ -42,6 +43,7 @@ public class LoopAutoTest extends OpMode {
     private ElapsedTime stateTime = new ElapsedTime();
     private ElapsedTime runTime = new ElapsedTime();
     private ElapsedTime turnClock = new ElapsedTime();
+    private ElapsedTime winchClock = new ElapsedTime();
 
     private int leftEncoderTarget;
     private int rightEncoderTarget;
@@ -64,9 +66,14 @@ public class LoopAutoTest extends OpMode {
     private double degreesTurned = 0;
     private double turnDirection = 0;
     private double TURN_POWER = 0;
+    private boolean WinchFin = false;
 
     private int armPrepare = 100;
     private int armDeploy = 300;
+
+    //temperary telemetry
+    boolean good = false;
+    boolean spin1 = false;
 
     private PathSegment beaconPath[] = {
             new PathSegment(147, 0.5), //drive to beacon
@@ -77,7 +84,23 @@ public class LoopAutoTest extends OpMode {
             new PathSegment(-15, 0.5)
     };
 
+    private PathSegment Run[] = {
+            new PathSegment(38, .5)
+    };
+    //forward one, try 1 inch further
+    private PathSegment Forward1[] = {
+            new PathSegment(95, .5)
+    };
+    private PathSegment Bforward[] = {
+            new PathSegment(-38, .5)
+    };
 
+//make sure numbers are changed acording to battery power
+
+
+    private PathSegment Reverse[] = {
+            new PathSegment(-30, .5)
+    };
 
 
     @Override
@@ -101,7 +124,7 @@ public class LoopAutoTest extends OpMode {
     @Override
     public void init_loop() {
         runToPosition();
-        gyroCalibrate = (int)gyro.getRotation();
+        gyroCalibrate = (int) gyro.getRotation();
         telemetry.addData("Enc", String.format("L %5d - R %5d ", getLeftPosition(), getRightPosition()));
         resetDriveEncoders();
     }
@@ -111,20 +134,46 @@ public class LoopAutoTest extends OpMode {
         runTime.reset();
         setDrivePower(0, 0);
         runToPosition();
+        motorArm.setPower(-.2);
+        newState(STATES.ARM);
+        telemetry.addData("start", "good");
+        /*
         newState(STATES.DRIVE_TO_BEACON);
+
         startPath(beaconPath);
+    */
     }
 
     @Override
     public void loop() {
 
+        switch (currentState) {
+
+            case ARM:
+                break;
+
+            case STOP:
+                useConstantPower();
+                setDrivePower(0, 0);
+                motorArm.setPower(0);
+                motorWinch.setPower(0);
+                motorIntake.setPower(0);
+                telemetry.addData("mission", "success");
+                break;
+        }
+
+        telemetry.addData("state", currentState);
+        telemetry.addData("arm", limitArm.getState());
+    }
+
+
+/*
         switch(currentState) {
 
             case INIT:
                 if(encodersAtZero()) {
                     startPath(beaconPath);
                     newState(STATES.DRIVE_TO_BEACON);
-                    telemetry.addData("INIT", "GOOD");
                 } else {
                     telemetry.addData("Enc", String.format("L %5d - R %5d ", getLeftPosition(), getRightPosition() ));
                 }
@@ -176,7 +225,8 @@ public class LoopAutoTest extends OpMode {
         }
 
         telemetry.addData("state", currentState);
-    }
+    */
+
 
     @Override
     public void stop() {
@@ -212,40 +262,33 @@ public class LoopAutoTest extends OpMode {
         motorArm.setTargetPosition(armEncoderTarget += armEncoder);
     }
 
-    void syncEncoders()
-    {
+    void syncEncoders() {
         leftEncoderTarget = motorLeft.getCurrentPosition();
         rightEncoderTarget = motorRight.getCurrentPosition();
     }
 
-    boolean encodersAtZero()
-    {
+    boolean encodersAtZero() {
         return ((Math.abs(getLeftPosition()) < 5) && (Math.abs(getRightPosition()) < 5));
     }
 
-    public void runToPosition()
-    {
+    public void runToPosition() {
         setDriveMode(DcMotorController.RunMode.RUN_TO_POSITION);
     }
 
-    public void useConstantSpeed()
-    {
+    public void useConstantSpeed() {
         setDriveMode(DcMotorController.RunMode.RUN_USING_ENCODERS);
     }
 
-    public void useConstantPower()
-    {
+    public void useConstantPower() {
         setDriveMode(DcMotorController.RunMode.RUN_WITHOUT_ENCODERS);
     }
 
-    public void resetDriveEncoders()
-    {
+    public void resetDriveEncoders() {
         setEncoderTarget(0, 0);
         setDriveMode(DcMotorController.RunMode.RESET_ENCODERS);
     }
 
-    public void setDriveMode(DcMotorController.RunMode mode)
-    {
+    public void setDriveMode(DcMotorController.RunMode mode) {
         // Ensure the motors are in the correct mode.
         if (motorLeft.getMode() != mode)
             motorLeft.setMode(mode);
@@ -254,19 +297,18 @@ public class LoopAutoTest extends OpMode {
             motorRight.setMode(mode);
     }
 
-    int getLeftPosition()
-    {
+    int getLeftPosition() {
         return motorLeft.getCurrentPosition();
     }
 
-    int getRightPosition()
-    {
+    int getRightPosition() {
         return motorRight.getCurrentPosition();
     }
 
     int getArmPosition() {
         return motorArm.getCurrentPosition();
     }
+
     private void startPath(PathSegment[] path) {
         currentPath = path;
         currentSegment = 0;
@@ -279,7 +321,7 @@ public class LoopAutoTest extends OpMode {
         int left;
         int right;
 
-        if(currentPath != null) {
+        if (currentPath != null) {
             left = (int) (currentPath[currentSegment].mLeft * ENCODER_TICKS_PER_INCH);
             right = (int) (currentPath[currentSegment].mRight * ENCODER_TICKS_PER_INCH);
             addEncoderTarget(left, right);
@@ -296,9 +338,9 @@ public class LoopAutoTest extends OpMode {
     }
 
     private boolean pathComplete() {
-        if(moveComplete()) {
+        if (moveComplete()) {
 
-            if(currentSegment < currentPath.length) {
+            if (currentSegment < currentPath.length) {
                 startSegment();
             } else {
                 currentPath = null;
@@ -311,6 +353,26 @@ public class LoopAutoTest extends OpMode {
         return false;
     }
 
+    private void WinchMove(double power) {
+        motorWinch.setPower(power);
+    }
+
+    private void armMove(double power) {
+        motorArm.setPower(power);
+    }
+
+    private boolean WinchDone() {
+        if (WinchFin) {
+            return true;
+        }
+        else return false;
+    }
+    private  void ResetWinchFin() {
+        WinchFin = false;
+    }
+
+
+
     private void positionArm(int position, double speed) {
         motorArm.setMode(DcMotorController.RunMode.RUN_TO_POSITION);
         setArmEncoderTarget(position);
@@ -322,17 +384,34 @@ public class LoopAutoTest extends OpMode {
         return (Math.abs(getArmPosition() - armEncoderTarget) < 10);
     }
 
+    private void spin (double degrees) {
+        useConstantPower();
+        degreesToTurn = degrees;
+        if (degreesToTurn < 0) {
+
+        while (Math.abs(degreesToTurn) > degreesTurned) {
+            left();
+        }
+    }
+        else {
+            while (Math.abs(degreesToTurn) < degreesTurned )
+            right();
+        }
+        spin1 = true;
+    }
+
     private void turn(double degrees) {
         useConstantPower();
         degreesToTurn = degrees;
         //double MOTOR_POWER = ;
         turnClock.reset();
 
-        if(degrees < 0) {
+        if (degrees < 0) {
             left();
         } else {
             right();
         }
+        spin1 = true;
     }
 
     private void left() {
@@ -350,27 +429,24 @@ public class LoopAutoTest extends OpMode {
     private void calculateTurn() {
         degreesTurned = (gyro.getRotation() - gyroCalibrate) * turnClock.time();
     }
+    private boolean ArmSafety() {
+        return Math.abs(motorArm.getCurrentPosition()) > 9000;
+    }
 
     private void resetTurn() {
         degreesTurned = 0;
         degreesToTurn = 0;
         TURN_POWER = 0;
     }
-
-}
-
-class PathSegment {
-
-    public double mLeft;
-    public double mRight;
-    public double mSpeed;
-
-    public PathSegment(double inches, double speed) {
-        mLeft = inches;
-        mRight = inches;
-        mSpeed = speed;
+    private boolean armLimited() {
+        return !limitArm.getState();
+    }
+    private boolean winchLimited() {
+        return !limitWinch.getState();
     }
 
 
 }
+
+
 

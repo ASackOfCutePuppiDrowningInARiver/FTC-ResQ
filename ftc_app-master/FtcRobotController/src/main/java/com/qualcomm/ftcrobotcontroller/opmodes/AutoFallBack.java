@@ -1,12 +1,14 @@
 package com.qualcomm.ftcrobotcontroller.opmodes;
 
-import android.graphics.Path;
-
-import com.qualcomm.robotcore.hardware.*;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
+import com.qualcomm.robotcore.hardware.ColorSensor;
+import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.DcMotorController;
+import com.qualcomm.robotcore.hardware.DigitalChannel;
+import com.qualcomm.robotcore.hardware.GyroSensor;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
-public class LoopAutoTest extends OpMode {
+public class AutoFallBack extends OpMode {
 
     //----------------------------------------------------------------------------------------------
     // States for state machine
@@ -124,7 +126,6 @@ public class LoopAutoTest extends OpMode {
                 if(encodersAtZero()) {
                     startPath(beaconPath);
                     newState(STATES.DRIVE_TO_BEACON);
-                    telemetry.addData("INIT", "GOOD");
                 } else {
                     telemetry.addData("Enc", String.format("L %5d - R %5d ", getLeftPosition(), getRightPosition() ));
                 }
@@ -356,21 +357,6 @@ public class LoopAutoTest extends OpMode {
         degreesToTurn = 0;
         TURN_POWER = 0;
     }
-
-}
-
-class PathSegment {
-
-    public double mLeft;
-    public double mRight;
-    public double mSpeed;
-
-    public PathSegment(double inches, double speed) {
-        mLeft = inches;
-        mRight = inches;
-        mSpeed = speed;
-    }
-
 
 }
 
