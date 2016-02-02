@@ -34,6 +34,7 @@ public class LoopAuto3 extends OpMode {
 
 
 
+
     }
 
     //----------------------------------------------------------------------------------------------
@@ -102,7 +103,7 @@ public class LoopAuto3 extends OpMode {
             new PathSegment(-30, .5)
     };
     private PathSegment Bback[] ={
-            new PathSegment(-10, .5)
+            new PathSegment(10, .5)
     };
 
 
@@ -228,8 +229,22 @@ public class LoopAuto3 extends OpMode {
             case WINCH:
                 if (armPositioned()) {
                     motorArm.setPower(.5);
+                    newState(STATES.ARM2);
                 }
-
+                break;
+            case ARM2:
+                if (stateTime.time () > 1.55 ) {
+                    WinchMove(0);
+                    positionArm(-5100, .3);
+                    newState(STATES.BBACKWARD);
+                }
+                break;
+            case BBACKWARD:
+                if (armPositioned()) {
+                    setDrivePower(0,0);
+                    newState(STATES.STOP);
+                }
+                break;
             case STOP:
                 useConstantPower();
                 setDrivePower(0, 0);

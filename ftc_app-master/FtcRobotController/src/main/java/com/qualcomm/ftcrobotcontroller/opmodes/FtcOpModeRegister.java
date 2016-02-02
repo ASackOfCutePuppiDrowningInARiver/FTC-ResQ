@@ -45,12 +45,8 @@ public class FtcOpModeRegister implements OpModeRegister {
    *
    * @param manager op mode manager
    */
-
-  public static OpModeManager opModeManager;
-
   public void register(OpModeManager manager) {
 
-    opModeManager = manager;
     /*
      * register your op modes here.
      * The first parameter is the name of the op mode
@@ -62,24 +58,17 @@ public class FtcOpModeRegister implements OpModeRegister {
     manager.register("NullOp", NullOp.class);
 
     //manager.register("MatrixK9TeleOp", MatrixK9TeleOp.class);
-   // manager.register("K9TeleOp", K9TeleOp.class);
-    //manager.register("K9Line", K9Line.class);
-    //manager.register ("PushBotAuto", PushBotAuto.class);
-    //manager.register ("PushBotManual", PushBotManual.class);
-    manager.register("ResQTeleOp", ResQTeleOP.class);
-    manager.register("Practice Hang", HangPractice.class);
-    manager.register("is it that time yet", LoopAuto.class);
-    manager.register("Retract Arm", Retract.class);
-    manager.register("Access Electronics", Extend.class);
-    manager.register("light", light.class);
-    manager.register("Joyce", LoopAuto2.class);
-    manager.register("something", LoopAuto3.class);
+    manager.register("K9TeleOp", K9TeleOp.class);
+    manager.register("K9Line", K9Line.class);
+    manager.register ("PushBotAuto", PushBotAuto.class);
+    manager.register ("PushBotManual", PushBotManual.class);
+
 
 
     /*
      * Uncomment any of the following lines if you want to register an op mode.
      */
-    //manager.register("MR Gyro Test", MRGyroTest.class);
+    manager.register("MR Gyro Test", MRGyroTest.class);
 
     //manager.register("AdafruitRGBExample", AdafruitRGBExample.class);
     //manager.register("ColorSensorDriver", ColorSensorDriver.class);
