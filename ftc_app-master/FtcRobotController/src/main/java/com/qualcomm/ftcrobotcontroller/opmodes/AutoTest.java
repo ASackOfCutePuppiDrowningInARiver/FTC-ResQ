@@ -43,7 +43,6 @@ import com.qualcomm.robotcore.hardware.Servo;
  */
 public class AutoTest extends LinearOpMode {
 
-    autoFunctions functions = new autoFunctions();
 
     DcMotor motorLeft;
     //DcMotor motorRight;

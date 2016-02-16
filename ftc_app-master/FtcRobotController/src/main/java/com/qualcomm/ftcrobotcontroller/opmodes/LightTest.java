@@ -1,7 +1,5 @@
 package com.qualcomm.ftcrobotcontroller.opmodes;
 //red
-import android.graphics.Path;
-import android.os.PowerManager;
 
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.hardware.ColorSensor;
@@ -13,18 +11,13 @@ import com.qualcomm.robotcore.hardware.LightSensor;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
-public class LoopAuto3 extends OpMode {
-
-    private STATES currentState;
-    private PathSegment[] currentPath;
-    private int currentSegment;
-
-    private ElapsedTime stateTime = new ElapsedTime();    LightSensor light;
+public class LightTest extends OpMode {
+    LightSensor light;
     Servo servoLeftBox;
 
     boolean leftDoorClose = true;
 
-
+    double leftDoorClosed = 0.72;
     //----------------------------------------------------------------------------------------------
     // States for state machine
     //----------------------------------------------------------------------------------------------
@@ -72,6 +65,11 @@ public class LoopAuto3 extends OpMode {
     //
     //----------------------------------------------------------------------------------------------
 
+    private STATES currentState;
+    private PathSegment[] currentPath;
+    private int currentSegment;
+
+    private ElapsedTime stateTime = new ElapsedTime();
     private ElapsedTime runTime = new ElapsedTime();
     private ElapsedTime turnClock = new ElapsedTime();
     private ElapsedTime winchClock = new ElapsedTime();
@@ -103,7 +101,6 @@ public class LoopAuto3 extends OpMode {
 
     private int armPrepare = 100;
     private int armDeploy = 300;
-    double leftDoorClosed = 0.72;
 
     //temperary telemetry
     boolean good = false;
@@ -111,13 +108,13 @@ public class LoopAuto3 extends OpMode {
 
 
     private PathSegment Forward1[] ={
-            new PathSegment(132,.5)
+            new PathSegment(130, .5)
     };
     private PathSegment ForwardLight[] ={
             new PathSegment(35, .5)
     };
     private PathSegment SquareUp[] ={
-            new PathSegment(-27, .5)
+            new PathSegment(-30, .5)
     };
     private PathSegment Bback[] ={
             new PathSegment(10, .5)
@@ -178,10 +175,9 @@ public class LoopAuto3 extends OpMode {
         syncArmEncoder();
         syncWinchEncoder();
         runToPosition();
-        leftBoxDoor.setPosition(leftDoorClosed);
         telemetry.addData("start", "good");
         motorArm.setMode(DcMotorController.RunMode.RUN_TO_POSITION);
-        startPath(begin);
+        light.enableLed(true);
         newState(STATES.BEGIN);
 
         /*
@@ -203,114 +199,8 @@ public class LoopAuto3 extends OpMode {
 //make it back up after light
 // make sure it goes forward from touching the wall
             case BEGIN:
-                if (pathComplete()) {
-                    leftBoxDoor.setPosition(leftDoorClosed);
-                    setDrivePower(0, 0);
-                    turn(48);
-                    newState(STATES.TURN1);
-                }
-                break;
-            case TURN1:
-                if (turnComplete()) {
-                    resetTurn();
-                    startPath(Forward1);
-                    newState(STATES.FORWORD1);
-                }
-                else {calculateTurn();}
-
-                break;
-            case FORWORD1:
-                if (pathComplete()){
-                    turn(-50);
-                    newState(STATES.TURN2);
-                }
-
-                break;
-            case TURN2:
-                if (turnComplete()) {
-                    resetTurn();
-                    setDrivePower(.3, .3);
-                    newState(STATES.FORWORDLIGHT);
-                }
-                else {calculateTurn();}
-
-                break;
-            //check light numbers
-            case FORWORDLIGHT:
-                if (light.getLightDetectedRaw() > 200) {
-                    setDrivePower(0, 0);
-                    startPath(counterBack);
-                    newState(STATES.COUNTERBACK);
-                }
-                break;
-            case COUNTERBACK:
-                if (pathComplete()) {
+                if (stateTime.time() > 500) {
                     setDrivePower(0,0);
-                    turn(-90);
-                    newState(STATES.BTURN);
-                }
-                break;
-            case BTURN:
-                if(turnComplete()){
-                    resetTurn();
-                    startPath(SquareUp);
-                    newState(STATES.SQUAREUP);
-                }
-                else {calculateTurn();}
-
-                break;
-            case SQUAREUP:
-                if (pathComplete()){
-                    setDrivePower(0,0);
-                    startPath(Bback);
-                    newState(STATES.ARM1);
-                }
-                break;
-            case ARM1:
-                if (pathComplete()) {
-                    setDrivePower(0, 0);
-                    positionArm(-1000, .5);
-                    newState(STATES.WINCH);
-                }
-                break;
-            case WINCH:
-                if (armPositioned()) {
-                    WinchMove(-.5);
-                    newState(STATES.ARM2);
-                }
-                break;
-            case ARM2:
-                if (stateTime.time () > 1.55 ) {
-                  WinchMove(0);
-                    positionArm(-5100,.3);
-                    newState(STATES.BBACKWARD);
-                }
-                break;
-            case BBACKWARD:
-                if (armPositioned()&& stateTime.time()> 5) {
-                    setDrivePower(0,0);
-                    WinchMove(.3);
-                    startPath(back);
-                    newState(STATES.ARM3);
-                }
-                break;
-            case ARM3:
-                if (winchLimited()){
-                    WinchMove(0);
-                    positionArm(0,.5);
-                    newState(STATES.RETRACT);
-                }
-                break;
-            case RETRACT:
-                if (armPositioned()) {
-                    setDrivePower(0,0);
-                    leftBoxDoor.setPosition(leftDoorClosed);
-                    startPath(SquareUpBasically);
-                    newState(STATES.POTATO);
-                }
-                break;
-            case POTATO:
-                if (pathComplete()){
                     newState(STATES.STOP);
                 }
                 break;

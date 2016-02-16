@@ -1,7 +1,5 @@
 package com.qualcomm.ftcrobotcontroller.opmodes;
 //red
-import android.graphics.Path;
-import android.os.PowerManager;
 
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.hardware.ColorSensor;
@@ -13,7 +11,7 @@ import com.qualcomm.robotcore.hardware.LightSensor;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
-public class LoopAuto3 extends OpMode {
+public class JhillsPlayHouse extends OpMode {
 
     private STATES currentState;
     private PathSegment[] currentPath;
@@ -575,6 +573,13 @@ public class LoopAuto3 extends OpMode {
     private boolean winchLimited() {
         return !limitWinch.getState();
     }
+
+    int momo =0;
+    int that =8;
+
+
+
+
 
 
 

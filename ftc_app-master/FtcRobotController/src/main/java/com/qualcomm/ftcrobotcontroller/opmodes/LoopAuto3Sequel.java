@@ -1,8 +1,5 @@
 package com.qualcomm.ftcrobotcontroller.opmodes;
-//red
-import android.graphics.Path;
-import android.os.PowerManager;
-
+//blue
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.hardware.ColorSensor;
 import com.qualcomm.robotcore.hardware.DcMotor;
@@ -13,17 +10,8 @@ import com.qualcomm.robotcore.hardware.LightSensor;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
-public class LoopAuto3 extends OpMode {
-
-    private STATES currentState;
-    private PathSegment[] currentPath;
-    private int currentSegment;
-
-    private ElapsedTime stateTime = new ElapsedTime();    LightSensor light;
-    Servo servoLeftBox;
-
-    boolean leftDoorClose = true;
-
+public class LoopAuto3Sequel extends OpMode {
+    LightSensor light;
 
     //----------------------------------------------------------------------------------------------
     // States for state machine
@@ -72,6 +60,11 @@ public class LoopAuto3 extends OpMode {
     //
     //----------------------------------------------------------------------------------------------
 
+    private STATES currentState;
+    private PathSegment[] currentPath;
+    private int currentSegment;
+
+    private ElapsedTime stateTime = new ElapsedTime();
     private ElapsedTime runTime = new ElapsedTime();
     private ElapsedTime turnClock = new ElapsedTime();
     private ElapsedTime winchClock = new ElapsedTime();
@@ -89,7 +82,6 @@ public class LoopAuto3 extends OpMode {
     DcMotor motorArm;
     GyroSensor gyro;
     ColorSensor color;
-    Servo leftZip;
 
     DigitalChannel limitWinch;
     DigitalChannel limitArm;
@@ -111,16 +103,16 @@ public class LoopAuto3 extends OpMode {
 
 
     private PathSegment Forward1[] ={
-            new PathSegment(132,.5)
+            new PathSegment(130, .5)
     };
     private PathSegment ForwardLight[] ={
             new PathSegment(35, .5)
     };
     private PathSegment SquareUp[] ={
-            new PathSegment(-27, .5)
+            new PathSegment(-30, .5)
     };
     private PathSegment Bback[] ={
-            new PathSegment(10, .5)
+            new PathSegment(7, .5)
     };
     private PathSegment counterBack[] ={
             new PathSegment(-3, .5)
@@ -167,7 +159,6 @@ public class LoopAuto3 extends OpMode {
         light = hardwareMap.lightSensor.get("light");
         light.enableLed(true);
         motorArm.setMode(DcMotorController.RunMode.RESET_ENCODERS);
-        leftBoxDoor.setPosition(leftDoorClosed);
     }
 
     @Override
@@ -177,8 +168,8 @@ public class LoopAuto3 extends OpMode {
         syncEncoders();
         syncArmEncoder();
         syncWinchEncoder();
-        runToPosition();
         leftBoxDoor.setPosition(leftDoorClosed);
+        runToPosition();
         telemetry.addData("start", "good");
         motorArm.setMode(DcMotorController.RunMode.RUN_TO_POSITION);
         startPath(begin);
@@ -205,8 +196,8 @@ public class LoopAuto3 extends OpMode {
             case BEGIN:
                 if (pathComplete()) {
                     leftBoxDoor.setPosition(leftDoorClosed);
-                    setDrivePower(0, 0);
-                    turn(48);
+                    setDrivePower(0,0);
+                    turn(-52);
                     newState(STATES.TURN1);
                 }
                 break;
@@ -221,7 +212,7 @@ public class LoopAuto3 extends OpMode {
                 break;
             case FORWORD1:
                 if (pathComplete()){
-                    turn(-50);
+                    turn(50);
                     newState(STATES.TURN2);
                 }
 
@@ -235,7 +226,6 @@ public class LoopAuto3 extends OpMode {
                 else {calculateTurn();}
 
                 break;
-            //check light numbers
             case FORWORDLIGHT:
                 if (light.getLightDetectedRaw() > 200) {
                     setDrivePower(0, 0);
@@ -246,7 +236,7 @@ public class LoopAuto3 extends OpMode {
             case COUNTERBACK:
                 if (pathComplete()) {
                     setDrivePower(0,0);
-                    turn(-90);
+                    turn(90);
                     newState(STATES.BTURN);
                 }
                 break;
@@ -268,7 +258,7 @@ public class LoopAuto3 extends OpMode {
                 break;
             case ARM1:
                 if (pathComplete()) {
-                    setDrivePower(0, 0);
+                    setDrivePower(0,0);
                     positionArm(-1000, .5);
                     newState(STATES.WINCH);
                 }
@@ -281,7 +271,7 @@ public class LoopAuto3 extends OpMode {
                 break;
             case ARM2:
                 if (stateTime.time () > 1.55 ) {
-                  WinchMove(0);
+                    WinchMove(0);
                     positionArm(-5100,.3);
                     newState(STATES.BBACKWARD);
                 }
@@ -297,14 +287,13 @@ public class LoopAuto3 extends OpMode {
             case ARM3:
                 if (winchLimited()){
                     WinchMove(0);
-                    positionArm(0,.5);
+                    positionArm(0, .5);
                     newState(STATES.RETRACT);
                 }
                 break;
             case RETRACT:
                 if (armPositioned()) {
                     setDrivePower(0,0);
-                    leftBoxDoor.setPosition(leftDoorClosed);
                     startPath(SquareUpBasically);
                     newState(STATES.POTATO);
                 }
@@ -440,7 +429,6 @@ public class LoopAuto3 extends OpMode {
             currentSegment++;
         }
     }
-
 
     private boolean moveComplete() {
 
